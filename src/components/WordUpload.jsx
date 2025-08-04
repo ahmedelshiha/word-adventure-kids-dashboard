@@ -43,6 +43,10 @@ const WordUpload = ({ onClose, onSuccess }) => {
     if (!formData.definition.trim()) {
       newErrors.definition = 'Definition is required'
     }
+
+    if (!formData.category) {
+      newErrors.category = 'Category is required'
+    }
     
     if (formData.imageType === 'url' && !formData.imageUrl.trim()) {
       newErrors.imageUrl = 'Image URL is required'
