@@ -35,7 +35,7 @@ const CategoryManager = ({ onClose }) => {
 
   const emojiOptions = [
     '📂', '📚', '🍎', '🐱', '🏠', '🌳', '🎨', '⭐', '🎯', '🔥',
-    '🌟', '💎', '🎪', '🎭', '🎨', '🎪', '🏆', '🎲', '🎯', '🎈'
+    '🌟', '💎', '🎪', '🎭', '🚀', '🎮', '🏆', '🎲', '🎵', '🎈'
   ]
 
   const [selectedColor, setSelectedColor] = useState(colorOptions[0])
