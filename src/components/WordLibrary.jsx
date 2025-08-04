@@ -218,12 +218,32 @@ const WordLibrary = () => {
                   variant={selectedStatus === status ? "default" : "outline"}
                   size="sm"
                   className={`rounded-full ${
-                    selectedStatus === status 
-                      ? 'bg-purple-500 text-white' 
+                    selectedStatus === status
+                      ? 'bg-purple-500 text-white'
                       : 'text-purple-600 border-purple-300'
                   }`}
                 >
                   {status.charAt(0).toUpperCase() + status.slice(1)}
+                </Button>
+              ))}
+            </div>
+
+            <div className="flex items-center space-x-2 flex-wrap">
+              <span className="text-purple-700 font-medium">Category:</span>
+              {categoryOptions.map((category) => (
+                <Button
+                  key={category.id}
+                  onClick={() => setSelectedCategory(category.id)}
+                  variant={selectedCategory === category.id ? "default" : "outline"}
+                  size="sm"
+                  className={`rounded-full ${
+                    selectedCategory === category.id
+                      ? 'bg-purple-500 text-white'
+                      : 'text-purple-600 border-purple-300'
+                  }`}
+                >
+                  <span className="mr-1">{category.emoji}</span>
+                  {category.name}
                 </Button>
               ))}
             </div>
@@ -300,7 +320,7 @@ const WordLibrary = () => {
                         src={word.image}
                         alt={word.word}
                         className="w-full h-full object-cover"
-                        fallbackEmoji="❓"
+                        fallbackEmoji="��"
                         showRetry={true}
                       />
                     ) : (
