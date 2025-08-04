@@ -110,6 +110,7 @@ const WordLibrary = () => {
 
   const difficulties = ['all', 'easy', 'medium', 'hard']
   const statuses = ['all', 'known', 'unknown']
+  const categoryOptions = [{ id: 'all', name: 'All Categories', emoji: '📚' }, ...categories]
 
   return (
     <div className="space-y-6">
