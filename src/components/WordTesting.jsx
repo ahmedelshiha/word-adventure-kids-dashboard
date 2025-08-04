@@ -231,7 +231,7 @@ const WordTesting = () => {
           animate={{ opacity: 1 }}
           className="text-center"
         >
-          <div className="text-6xl mb-4">���</div>
+          <div className="text-6xl mb-4">🎉</div>
           <h2 className="text-2xl font-bold text-purple-800 mb-4">Quiz Complete!</h2>
           <Button onClick={() => navigate('/results')} className="btn-fun">
             View Results
@@ -429,9 +429,8 @@ const WordTesting = () => {
       </motion.div>
 
       {/* Category Selection Modal */}
-      {console.log('showCategorySelection:', showCategorySelection)}
       <AnimatePresence>
-        {(showCategorySelection || true) && (
+        {showCategorySelection && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
