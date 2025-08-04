@@ -150,10 +150,26 @@ const WordTesting = () => {
                 </p>
                 <div className="bg-purple-50 p-4 rounded-xl">
                   <p className="text-sm text-purple-700">
-                    📝 You'll see {words.length} words<br/>
+                    📝 You'll see {quizWords.length} words<br/>
                     🎯 Mark if you remember each one<br/>
                     🏆 Get your results at the end
                   </p>
+                  {selectedQuizCategories.length > 0 && (
+                    <div className="mt-2 pt-2 border-t border-purple-200">
+                      <p className="text-xs text-purple-600 mb-1">Selected categories:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {selectedQuizCategories.map(categoryId => {
+                          const category = categories.find(cat => cat.id === categoryId)
+                          return category ? (
+                            <span key={categoryId} className={`inline-block px-2 py-1 rounded-full text-xs font-semibold bg-gradient-to-r ${category.color} text-white`}>
+                              <span className="mr-1">{category.emoji}</span>
+                              {category.name}
+                            </span>
+                          ) : null
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
               
