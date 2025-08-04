@@ -37,6 +37,9 @@ const WordTesting = () => {
   const [showResult, setShowResult] = useState(false)
   const [lastAnswer, setLastAnswer] = useState(null)
   const [testStarted, setTestStarted] = useState(false)
+  const [showCategorySelection, setShowCategorySelection] = useState(false)
+
+  const quizWords = getFilteredWordsForQuiz()
 
   useEffect(() => {
     setIsTestMode(true)
