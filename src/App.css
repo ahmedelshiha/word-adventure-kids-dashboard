@@ -1,6 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
@@ -229,3 +230,175 @@
 }
 
   
+
+/* Mobile-first responsive design enhancements */
+@media (max-width: 768px) {
+  /* Improve touch targets */
+  .btn-fun {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Better spacing on mobile */
+  .space-y-4 > * + * {
+    margin-top: 1rem;
+  }
+  
+  .space-y-6 > * + * {
+    margin-top: 1.5rem;
+  }
+  
+  /* Improve card readability */
+  .card-content {
+    padding: 1rem;
+  }
+  
+  /* Better modal sizing */
+  .modal-content {
+    margin: 1rem;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  /* Larger text for better readability */
+  .text-sm {
+    font-size: 0.9rem;
+  }
+  
+  /* Better grid spacing */
+  .grid {
+    gap: 1rem;
+  }
+}
+
+/* Touch-friendly interactions */
+@media (hover: none) and (pointer: coarse) {
+  .hover\:shadow-xl:hover {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+  
+  .hover\:scale-105:hover {
+    transform: scale(1.05);
+  }
+  
+  /* Remove hover effects on touch devices */
+  .card-hover:hover {
+    transform: none;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+}
+
+/* Prevent zoom on input focus on iOS */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  select,
+  textarea,
+  input[type="text"],
+  input[type="password"],
+  input[type="datetime"],
+  input[type="datetime-local"],
+  input[type="date"],
+  input[type="month"],
+  input[type="time"],
+  input[type="week"],
+  input[type="number"],
+  input[type="email"],
+  input[type="url"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="color"] {
+    font-size: 16px;
+  }
+}
+
+/* Swipe indicators */
+.swipe-indicator {
+  transition: opacity 0.2s ease-in-out;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Loading animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Better focus indicators for accessibility */
+.focus\:ring-2:focus {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.5);
+}
+
+/* Improved button states */
+.btn-fun:active {
+  transform: scale(0.98);
+}
+
+.btn-fun:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Mobile navigation improvements */
+@media (max-width: 1024px) {
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  .sidebar.open {
+    transform: translateX(0);
+  }
+}
+
+/* Swipe gesture feedback */
+.swipe-card {
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.swipe-card.dragging {
+  cursor: grabbing;
+  z-index: 10;
+}
+
+/* Better visual feedback for interactions */
+.interactive-element {
+  transition: all 0.2s ease-in-out;
+}
+
+.interactive-element:active {
+  transform: scale(0.95);
+}
+
+/* Improved loading states */
+.loading-shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+

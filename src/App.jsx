@@ -6,6 +6,7 @@ import Dashboard from './components/Dashboard'
 import WordLibrary from './components/WordLibrary'
 import WordTesting from './components/WordTesting'
 import Results from './components/Results'
+import ProgressDashboard from './components/ProgressDashboard'
 import ParentSettings from './components/ParentSettings'
 import Layout from './components/Layout'
 import LoadingSpinner from './components/LoadingSpinner'
@@ -77,6 +78,16 @@ function App() {
       }
     }
     
+    // Load saved test results
+    const savedTestResults = localStorage.getItem('word_adventure_test_results')
+    if (savedTestResults) {
+      try {
+        setTestResults(JSON.parse(savedTestResults))
+      } catch (error) {
+        console.error('Error parsing saved test results:', error)
+      }
+    }
+    
     setLoading(false)
   }, [])
 
@@ -84,6 +95,11 @@ function App() {
   useEffect(() => {
     localStorage.setItem('word_adventure_words', JSON.stringify(words))
   }, [words])
+
+  // Save test results whenever they change
+  useEffect(() => {
+    localStorage.setItem('word_adventure_test_results', JSON.stringify(testResults))
+  }, [testResults])
 
   const login = async (username, password) => {
     // Demo login - in real app this would call an API
@@ -187,6 +203,7 @@ function AuthenticatedApp() {
           <Route path="/library" element={<WordLibrary />} />
           <Route path="/test" element={<WordTesting />} />
           <Route path="/results" element={<Results />} />
+          <Route path="/progress" element={<ProgressDashboard />} />
           <Route path="/settings" element={<ParentSettings />} />
         </Routes>
       </AnimatePresence>
