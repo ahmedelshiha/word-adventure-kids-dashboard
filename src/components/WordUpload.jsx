@@ -18,7 +18,7 @@ import {
 } from 'lucide-react'
 
 const WordUpload = ({ onClose, onSuccess }) => {
-  const { words, setWords } = useApp()
+  const { words, setWords, categories } = useApp()
   const [formData, setFormData] = useState({
     word: '',
     definition: '',
@@ -506,4 +506,3 @@ const WordUpload = ({ onClose, onSuccess }) => {
 }
 
 export default WordUpload
-
