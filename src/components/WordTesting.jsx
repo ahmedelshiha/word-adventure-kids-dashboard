@@ -19,14 +19,18 @@ import {
 
 const WordTesting = () => {
   const navigate = useNavigate()
-  const { 
-    words, 
-    currentWordIndex, 
-    setCurrentWordIndex, 
-    testResults, 
-    addTestResult, 
+  const {
+    words,
+    categories,
+    currentWordIndex,
+    setCurrentWordIndex,
+    testResults,
+    addTestResult,
     resetTest,
-    setIsTestMode 
+    setIsTestMode,
+    selectedQuizCategories,
+    setSelectedQuizCategories,
+    getFilteredWordsForQuiz
   } = useApp()
   
   const [currentWord, setCurrentWord] = useState(null)
@@ -369,4 +373,3 @@ const WordTesting = () => {
 }
 
 export default WordTesting
-
