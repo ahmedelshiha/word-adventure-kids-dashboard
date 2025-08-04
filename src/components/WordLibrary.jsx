@@ -41,11 +41,12 @@ const WordLibrary = () => {
   const filteredWords = words.filter(word => {
     const matchesSearch = word.word.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesDifficulty = selectedDifficulty === 'all' || word.difficulty === selectedDifficulty
-    const matchesStatus = selectedStatus === 'all' || 
+    const matchesStatus = selectedStatus === 'all' ||
       (selectedStatus === 'known' && word.known) ||
       (selectedStatus === 'unknown' && !word.known)
-    
-    return matchesSearch && matchesDifficulty && matchesStatus
+    const matchesCategory = selectedCategory === 'all' || word.category === selectedCategory
+
+    return matchesSearch && matchesDifficulty && matchesStatus && matchesCategory
   })
 
   const speakWord = (word) => {
