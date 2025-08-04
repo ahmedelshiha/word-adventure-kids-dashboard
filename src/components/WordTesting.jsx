@@ -429,6 +429,7 @@ const WordTesting = () => {
       </motion.div>
 
       {/* Category Selection Modal */}
+      {console.log('showCategorySelection:', showCategorySelection)}
       <AnimatePresence>
         {showCategorySelection && (
           <motion.div
