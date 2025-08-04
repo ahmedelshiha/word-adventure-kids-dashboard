@@ -179,6 +179,7 @@ const WordUpload = ({ onClose, onSuccess }) => {
         word: '',
         definition: '',
         difficulty: 'easy',
+        category: categories.length > 0 ? categories[0].id : '',
         imageType: 'emoji',
         image: '',
         imageUrl: '',
