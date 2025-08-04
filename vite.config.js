@@ -1,16 +1,13 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react( )],
+  plugins: [react()],
   resolve: {
     alias: {
-      'react-router-dom': 'react-router-dom',
-      'lucide-react': 'lucide-react',
-      '@radix-ui/react-progress': '@radix-ui/react-progress',
-      '@radix-ui/react-switch': '@radix-ui/react-switch',
-      '@radix-ui/react-slot': '@radix-ui/react-slot' // Add this line
+      // Only add aliases if you're changing the path or using custom structure
+      // Example (if needed): '@/components': '/src/components'
     }
   }
-})
+});
