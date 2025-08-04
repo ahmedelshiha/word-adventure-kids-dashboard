@@ -46,14 +46,17 @@ const WordTesting = () => {
     setIsTestMode(true)
     // Clear selected categories when component mounts to start fresh
     setSelectedQuizCategories([])
-    if (quizWords.length > 0 && currentWordIndex < quizWords.length) {
-      setCurrentWord(quizWords[currentWordIndex])
-    }
 
     return () => {
       setIsTestMode(false)
     }
-  }, [setIsTestMode])
+  }, [setIsTestMode, setSelectedQuizCategories])
+
+  useEffect(() => {
+    if (quizWords.length > 0 && currentWordIndex < quizWords.length) {
+      setCurrentWord(quizWords[currentWordIndex])
+    }
+  }, [quizWords, currentWordIndex])
 
   const progress = quizWords.length > 0 ? ((currentWordIndex + 1) / quizWords.length) * 100 : 0
 
@@ -378,7 +381,7 @@ const WordTesting = () => {
                   }`}
                 >
                   <div className="text-4xl mb-2">
-                    {lastAnswer ? '🎉' : '💪'}
+                    {lastAnswer ? '��' : '💪'}
                   </div>
                   <p className={`text-xl font-semibold ${
                     lastAnswer ? 'text-green-700' : 'text-red-700'
