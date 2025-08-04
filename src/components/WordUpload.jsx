@@ -145,6 +145,7 @@ const WordUpload = ({ onClose, onSuccess }) => {
         word: formData.word.trim(),
         definition: formData.definition.trim(),
         difficulty: formData.difficulty,
+        category: formData.category,
         known: false,
         isCustom: true,
         dateAdded: new Date().toISOString()
