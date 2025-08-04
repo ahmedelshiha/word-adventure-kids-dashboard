@@ -164,10 +164,7 @@ const WordTesting = () => {
               </div>
               
               <Button
-                onClick={() => {
-                  alert('Button clicked!')
-                  setShowCategorySelection(true)
-                }}
+                onClick={() => setShowCategorySelection(true)}
                 className="w-full h-12 text-lg font-semibold btn-fun bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
               >
                 <Brain className="h-5 w-5 mr-2" />
