@@ -411,8 +411,8 @@ const WordTesting = () => {
               <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-6">
                 <div className="flex justify-between items-center">
                   <h2 className="text-2xl font-bold flex items-center">
-                    <Filter className="h-6 w-6 mr-2" />
-                    Choose Quiz Categories
+                    <Brain className="h-6 w-6 mr-2" />
+                    Start Your Quiz
                   </h2>
                   <Button
                     onClick={() => setShowCategorySelection(false)}
