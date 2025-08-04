@@ -75,7 +75,7 @@ const WordTesting = () => {
       setShowResult(false)
       setLastAnswer(null)
       
-      if (currentWordIndex < words.length - 1) {
+      if (currentWordIndex < quizWords.length - 1) {
         setCurrentWordIndex(currentWordIndex + 1)
       } else {
         // Test completed
