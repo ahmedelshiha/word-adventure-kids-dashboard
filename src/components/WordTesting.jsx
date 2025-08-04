@@ -392,131 +392,113 @@ const WordTesting = () => {
       </motion.div>
 
       {/* Category Selection Modal */}
-      <AnimatePresence>
-        {showCategorySelection && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => setShowCategorySelection(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-6">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-2xl font-bold flex items-center">
-                    <Brain className="h-6 w-6 mr-2" />
-                    Start Your Quiz
-                  </h2>
+      {showCategorySelection && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+            <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold flex items-center">
+                  <Brain className="h-6 w-6 mr-2" />
+                  Start Your Quiz
+                </h2>
+                <Button
+                  onClick={() => setShowCategorySelection(false)}
+                  size="sm"
+                  variant="ghost"
+                  className="text-white hover:bg-white/20"
+                >
+                  <X className="h-5 w-5" />
+                </Button>
+              </div>
+            </div>
+
+            <div className="p-6 max-h-[60vh] overflow-y-auto">
+              <div className="space-y-4">
+                <p className="text-purple-700">
+                  Select categories for your quiz (leave empty to include all words):
+                </p>
+
+                <div className="flex space-x-2 mb-4">
                   <Button
-                    onClick={() => setShowCategorySelection(false)}
+                    onClick={() => setSelectedQuizCategories([])}
                     size="sm"
-                    variant="ghost"
-                    className="text-white hover:bg-white/20"
+                    variant="outline"
+                    className="text-purple-600 border-purple-300"
                   >
-                    <X className="h-5 w-5" />
+                    Clear All
+                  </Button>
+                  <Button
+                    onClick={() => setSelectedQuizCategories(categories.map(cat => cat.id))}
+                    size="sm"
+                    variant="outline"
+                    className="text-purple-600 border-purple-300"
+                  >
+                    Select All
                   </Button>
                 </div>
-              </div>
 
-              <div className="p-6 max-h-[60vh] overflow-y-auto">
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <p className="text-purple-700">
-                      Select categories for your quiz (leave empty to include all words):
-                    </p>
-                    <div className="flex space-x-2">
-                      <Button
-                        onClick={() => setSelectedQuizCategories([])}
-                        size="sm"
-                        variant="outline"
-                        className="text-purple-600 border-purple-300"
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {categories.map((category) => {
+                    const isSelected = selectedQuizCategories.includes(category.id)
+                    const wordCount = words.filter(word => word.category === category.id).length
+
+                    return (
+                      <div
+                        key={category.id}
+                        className={`cursor-pointer p-4 rounded-lg border-2 transition-all duration-200 text-center ${
+                          isSelected
+                            ? 'border-purple-500 bg-purple-50'
+                            : 'border-gray-200 hover:border-purple-300'
+                        }`}
+                        onClick={() => handleCategoryToggle(category.id)}
                       >
-                        Clear All
-                      </Button>
-                      <Button
-                        onClick={() => setSelectedQuizCategories(categories.map(cat => cat.id))}
-                        size="sm"
-                        variant="outline"
-                        className="text-purple-600 border-purple-300"
-                      >
-                        Select All
-                      </Button>
-                    </div>
-                  </div>
+                        <div className={`inline-block px-3 py-2 rounded-full text-sm font-semibold bg-gradient-to-r ${category.color} text-white mb-2`}>
+                          <span className="mr-1">{category.emoji}</span>
+                          {category.name}
+                        </div>
+                        <p className="text-xs text-gray-600">
+                          {wordCount} word{wordCount !== 1 ? 's' : ''}
+                        </p>
+                        {isSelected && (
+                          <div className="mt-2">
+                            <Check className="h-4 w-4 text-purple-500 mx-auto" />
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
 
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {categories.map((category) => {
-                      const isSelected = selectedQuizCategories.includes(category.id)
-                      const wordCount = words.filter(word => word.category === category.id).length
+                <div className="flex justify-between items-center pt-4 border-t">
+                  <p className="text-sm text-purple-600">
+                    {selectedQuizCategories.length === 0
+                      ? `All ${words.length} words will be included`
+                      : `${quizWords.length} words selected`
+                    }
+                  </p>
 
-                      return (
-                        <Card
-                          key={category.id}
-                          className={`cursor-pointer transition-all duration-200 relative ${
-                            isSelected
-                              ? 'ring-2 ring-purple-500 bg-purple-50'
-                              : 'hover:shadow-md'
-                          }`}
-                          onClick={() => handleCategoryToggle(category.id)}
-                        >
-                          <CardContent className="p-4 text-center">
-                            <div className={`inline-block px-3 py-2 rounded-full text-sm font-semibold bg-gradient-to-r ${category.color} text-white mb-2`}>
-                              <span className="mr-1">{category.emoji}</span>
-                              {category.name}
-                            </div>
-                            <p className="text-xs text-gray-600">
-                              {wordCount} word{wordCount !== 1 ? 's' : ''}
-                            </p>
-                            {isSelected && (
-                              <div className="absolute top-2 right-2">
-                                <Check className="h-4 w-4 text-purple-500" />
-                              </div>
-                            )}
-                          </CardContent>
-                        </Card>
-                      )
-                    })}
-                  </div>
-
-                  <div className="flex justify-between items-center pt-4 border-t">
-                    <p className="text-sm text-purple-600">
-                      {selectedQuizCategories.length === 0
-                        ? `All ${words.length} words will be included`
-                        : `${quizWords.length} words selected`
-                      }
-                    </p>
-
-                    <div className="flex space-x-3">
-                      <Button
-                        onClick={() => setShowCategorySelection(false)}
-                        variant="outline"
-                        className="border-gray-300"
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        onClick={startQuizWithCategories}
-                        disabled={quizWords.length === 0}
-                        className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
-                      >
-                        <Brain className="h-4 w-4 mr-2" />
-                        Start Quiz ({quizWords.length} words)
-                      </Button>
-                    </div>
+                  <div className="flex space-x-3">
+                    <Button
+                      onClick={() => setShowCategorySelection(false)}
+                      variant="outline"
+                      className="border-gray-300"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={startQuizWithCategories}
+                      className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+                    >
+                      <Brain className="h-4 w-4 mr-2" />
+                      Start Quiz ({quizWords.length} words)
+                    </Button>
                   </div>
                 </div>
               </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
