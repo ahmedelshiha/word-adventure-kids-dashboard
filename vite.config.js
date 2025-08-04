@@ -6,8 +6,10 @@ export default defineConfig({
   plugins: [react( )],
   resolve: {
     alias: {
-      'react-router-dom': 'react-router-dom'
+      'react-router-dom': 'react-router-dom',
+      'lucide-react': 'lucide-react' // Add this line
     }
   }
 })
+
 
