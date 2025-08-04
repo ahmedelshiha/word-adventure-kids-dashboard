@@ -52,7 +52,7 @@ const WordTesting = () => {
     }
   }, [quizWords, currentWordIndex, setIsTestMode])
 
-  const progress = words.length > 0 ? ((currentWordIndex + 1) / words.length) * 100 : 0
+  const progress = quizWords.length > 0 ? ((currentWordIndex + 1) / quizWords.length) * 100 : 0
 
   const speakWord = () => {
     if ('speechSynthesis' in window && currentWord) {
