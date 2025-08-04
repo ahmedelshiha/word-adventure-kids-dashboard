@@ -1,4 +1,3 @@
-// tailwind.config.js
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
@@ -12,6 +11,9 @@ module.exports = {
       },
       outlineColor: {
         ring: 'var(--color-ring)',
+      },
+      backgroundColor: {
+        background: 'var(--color-background)',
       },
     },
   },
