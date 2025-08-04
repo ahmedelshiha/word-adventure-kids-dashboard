@@ -6,15 +6,16 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { Progress } from './ui/progress'
 import { useApp } from '../App'
 import ImageFallback from './ImageFallback'
-import { 
-  Volume2, 
-  Check, 
-  X, 
+import {
+  Volume2,
+  Check,
+  X,
   Brain,
   ArrowRight,
   RotateCcw,
   Home,
-  HelpCircle
+  HelpCircle,
+  Filter
 } from 'lucide-react'
 
 const WordTesting = () => {
