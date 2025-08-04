@@ -8,7 +8,8 @@ export default defineConfig({
     alias: {
       'react-router-dom': 'react-router-dom',
       'lucide-react': 'lucide-react',
-      '@radix-ui/react-progress': '@radix-ui/react-progress' // Add this line
+      '@radix-ui/react-progress': '@radix-ui/react-progress',
+      '@radix-ui/react-switch': '@radix-ui/react-switch' // Add this line
     }
   }
 })
