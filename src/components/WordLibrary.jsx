@@ -467,6 +467,15 @@ const WordLibrary = () => {
           />
         )}
       </AnimatePresence>
+
+      {/* Category Manager Modal */}
+      <AnimatePresence>
+        {showCategoryModal && (
+          <CategoryManager
+            onClose={() => setShowCategoryModal(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }
