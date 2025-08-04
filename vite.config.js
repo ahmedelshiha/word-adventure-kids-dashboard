@@ -7,9 +7,8 @@ export default defineConfig({
   resolve: {
     alias: {
       'react-router-dom': 'react-router-dom',
-      'lucide-react': 'lucide-react' // Add this line
+      'lucide-react': 'lucide-react',
+      '@radix-ui/react-progress': '@radix-ui/react-progress' // Add this line
     }
   }
 })
-
-
