@@ -254,7 +254,7 @@ const WordTesting = () => {
           </motion.span>
         </h1>
         <p className="text-lg text-purple-600">
-          Word {currentWordIndex + 1} of {words.length}
+          Word {currentWordIndex + 1} of {quizWords.length}
         </p>
       </motion.div>
 
