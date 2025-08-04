@@ -173,13 +173,31 @@ const WordTesting = () => {
                 </div>
               </div>
               
-              <Button
-                onClick={startTest}
-                className="w-full h-12 text-lg font-semibold btn-fun bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
-              >
-                <Brain className="h-5 w-5 mr-2" />
-                Start Quiz
-              </Button>
+              <div className="space-y-3">
+                <Button
+                  onClick={() => setShowCategorySelection(true)}
+                  variant="outline"
+                  className="w-full h-12 text-lg font-semibold btn-fun border-2 border-purple-300 text-purple-700 hover:bg-purple-50"
+                >
+                  <Filter className="h-5 w-5 mr-2" />
+                  Choose Categories ({selectedQuizCategories.length > 0 ? selectedQuizCategories.length + ' selected' : 'All'})
+                </Button>
+
+                <Button
+                  onClick={startTest}
+                  disabled={quizWords.length === 0}
+                  className="w-full h-12 text-lg font-semibold btn-fun bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Brain className="h-5 w-5 mr-2" />
+                  Start Quiz
+                </Button>
+
+                {quizWords.length === 0 && selectedQuizCategories.length > 0 && (
+                  <p className="text-sm text-red-600 text-center">
+                    No words found in selected categories. Please choose different categories.
+                  </p>
+                )}
+              </div>
               
               <Button
                 onClick={goHome}
