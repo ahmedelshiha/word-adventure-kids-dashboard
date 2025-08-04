@@ -331,9 +331,21 @@ const WordLibrary = () => {
                   {/* Word Text */}
                   <h3 className="text-xl font-bold text-gray-800">{word.word}</h3>
 
-                  {/* Difficulty Badge */}
-                  <div className={`inline-block px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r ${difficultyColors[word.difficulty]} text-white`}>
-                    {word.difficulty.charAt(0).toUpperCase() + word.difficulty.slice(1)}
+                  {/* Category and Difficulty Badges */}
+                  <div className="flex justify-center space-x-2 flex-wrap">
+                    {word.category && (
+                      <div className={`inline-block px-2 py-1 rounded-full text-xs font-semibold bg-gradient-to-r ${
+                        categories.find(cat => cat.id === word.category)?.color || 'from-gray-400 to-gray-500'
+                      } text-white`}>
+                        <span className="mr-1">
+                          {categories.find(cat => cat.id === word.category)?.emoji || '📂'}
+                        </span>
+                        {categories.find(cat => cat.id === word.category)?.name || 'Other'}
+                      </div>
+                    )}
+                    <div className={`inline-block px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r ${difficultyColors[word.difficulty]} text-white`}>
+                      {word.difficulty.charAt(0).toUpperCase() + word.difficulty.slice(1)}
+                    </div>
                   </div>
 
                   {/* Action Buttons */}
