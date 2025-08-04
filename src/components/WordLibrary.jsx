@@ -148,14 +148,24 @@ const WordLibrary = () => {
       </motion.div>
 
       <div className="flex justify-between items-center mb-6">
-        {/* Add Word Button */}
-        <Button
-          onClick={() => setShowUploadModal(true)}
-          className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-semibold px-6 py-3 rounded-full shadow-lg transform hover:scale-105 transition-all duration-200"
-        >
-          <Plus className="h-5 w-5 mr-2" />
-          Add New Word
-        </Button>
+        {/* Action Buttons */}
+        <div className="flex space-x-3">
+          <Button
+            onClick={() => setShowUploadModal(true)}
+            className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-semibold px-6 py-3 rounded-full shadow-lg transform hover:scale-105 transition-all duration-200"
+          >
+            <Plus className="h-5 w-5 mr-2" />
+            Add New Word
+          </Button>
+
+          <Button
+            onClick={() => setShowCategoryModal(true)}
+            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold px-6 py-3 rounded-full shadow-lg transform hover:scale-105 transition-all duration-200"
+          >
+            <BookOpen className="h-5 w-5 mr-2" />
+            Manage Categories
+          </Button>
+        </div>
       </div>
 
       {/* Search and Filters */}
