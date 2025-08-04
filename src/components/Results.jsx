@@ -15,7 +15,8 @@ import {
   Brain,
   BookOpen,
   Award,
-  Zap
+  Zap,
+  Check
 } from 'lucide-react'
 
 const Results = () => {

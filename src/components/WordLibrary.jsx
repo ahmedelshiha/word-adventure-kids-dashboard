@@ -4,6 +4,11 @@ import { Button } from './ui/button'
 import { Card, CardContent } from './ui/card'
 import { Input } from './ui/input'
 import { useApp } from '../App'
+import WordUpload from './WordUpload'
+import WordEdit from './WordEdit'
+import LoadingState from './LoadingState'
+import ImageFallback from './ImageFallback'
+import SwipeableCard from './SwipeableCard'
 import { 
   Search, 
   Volume2, 
@@ -11,14 +16,25 @@ import {
   BookOpen,
   Check,
   X,
-  Star
+  Star,
+  Plus,
+  Edit,
+  Trash2,
+  Smartphone
 } from 'lucide-react'
 
 const WordLibrary = () => {
-  const { words, updateWordStatus } = useApp()
+  const { words, updateWordStatus, setWords } = useApp()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedDifficulty, setSelectedDifficulty] = useState('all')
   const [selectedStatus, setSelectedStatus] = useState('all')
+  const [showUploadModal, setShowUploadModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingWord, setEditingWord] = useState(null)
+  const [uploadSuccess, setUploadSuccess] = useState(null)
+  const [editSuccess, setEditSuccess] = useState(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
 
   const filteredWords = words.filter(word => {
     const matchesSearch = word.word.toLowerCase().includes(searchTerm.toLowerCase())
@@ -39,8 +55,48 @@ const WordLibrary = () => {
     }
   }
 
-  const toggleWordStatus = (wordId, currentStatus) => {
-    updateWordStatus(wordId, !currentStatus)
+  const toggleWordStatus = async (wordId, currentStatus) => {
+    setIsLoading(true)
+    // Simulate API call delay for better UX
+    setTimeout(() => {
+      updateWordStatus(wordId, !currentStatus)
+      setIsLoading(false)
+    }, 300)
+  }
+
+  const handleUploadSuccess = (newWord) => {
+    setUploadSuccess(newWord)
+    setTimeout(() => setUploadSuccess(null), 3000)
+  }
+
+  const handleEditWord = (word) => {
+    setEditingWord(word)
+    setShowEditModal(true)
+  }
+
+  const handleEditSuccess = (updatedWord) => {
+    setEditSuccess(updatedWord)
+    setTimeout(() => setEditSuccess(null), 3000)
+  }
+
+  const handleSwipeRight = (wordId, currentStatus) => {
+    // Swipe right = mark as known
+    if (!currentStatus) {
+      toggleWordStatus(wordId, currentStatus)
+    }
+  }
+
+  const handleSwipeLeft = (wordId, currentStatus) => {
+    // Swipe left = mark as unknown
+    if (currentStatus) {
+      toggleWordStatus(wordId, currentStatus)
+    }
+  }
+
+  const handleDeleteWord = (wordToDelete) => {
+    setWords(prev => prev.filter(w => w.id !== wordToDelete.id))
+    setEditSuccess({ word: wordToDelete.word, action: 'deleted' })
+    setTimeout(() => setEditSuccess(null), 3000)
   }
 
   const difficultyColors = {
@@ -59,27 +115,47 @@ const WordLibrary = () => {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="text-center"
-      >
-        <h1 className="text-4xl font-bold text-purple-800 mb-2 text-fun-shadow flex items-center justify-center">
-          <BookOpen className="h-10 w-10 mr-3" />
-          Word Library 
-          <motion.span 
-            className="ml-2"
-            animate={{ rotate: [0, 10, -10, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
+        className="text-center">
+        <h1 className="text-5xl font-bold text-purple-700 text-fun-shadow mb-2 flex items-center justify-center">
+          <motion.span
+            initial={{ rotate: 0 }}
+            animate={{ rotate: [0, -10, 10, -10, 0] }}
+            transition={{ duration: 1, repeat: Infinity, repeatDelay: 3 }}
+            className="mr-3"
           >
             📚
           </motion.span>
+          Word Library
         </h1>
         <p className="text-lg text-purple-600">
-          Explore and practice all your words
+          Explore and manage your word collection
         </p>
+        {isMobile && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="mt-2 flex items-center justify-center text-sm text-purple-500 bg-purple-50 px-4 py-2 rounded-full"
+          >
+            <Smartphone className="h-4 w-4 mr-2" />
+            Swipe cards left/right to toggle status
+          </motion.div>
+        )}
       </motion.div>
 
+      <div className="flex justify-between items-center mb-6">
+        {/* Add Word Button */}
+        <Button
+          onClick={() => setShowUploadModal(true)}
+          className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-semibold px-6 py-3 rounded-full shadow-lg transform hover:scale-105 transition-all duration-200"
+        >
+          <Plus className="h-5 w-5 mr-2" />
+          Add New Word
+        </Button>
+      </div>
+
       {/* Search and Filters */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
+      <motion.div initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.1 }}
         className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-lg"
@@ -152,12 +228,17 @@ const WordLibrary = () => {
       </motion.div>
 
       {/* Words Grid */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
+         <motion.div initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.3 }}
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
       >
+        {isLoading && (
+          <div className="col-span-full">
+            <LoadingState message="Updating words..." type="inline" size="small" />
+          </div>
+        )}
+        
         <AnimatePresence>
           {filteredWords.map((word, index) => (
             <motion.div
@@ -166,31 +247,51 @@ const WordLibrary = () => {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
               transition={{ duration: 0.3, delay: index * 0.05 }}
-              whileHover={{ scale: 1.05 }}
-              className="relative"
             >
-              <Card className="card-hover bg-white/90 backdrop-blur-sm border-0 shadow-lg overflow-hidden">
-                <CardContent className="p-6 text-center space-y-4">
-                  {/* Status Badge */}
-                  <div className="absolute top-3 right-3">
-                    {word.known ? (
-                      <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                        <Check className="h-4 w-4 text-white" />
-                      </div>
-                    ) : (
-                      <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
-                        <X className="h-4 w-4 text-gray-600" />
-                      </div>
-                    )}
-                  </div>
+              <SwipeableCard
+                onSwipeRight={() => handleSwipeRight(word.id, word.known)}
+                onSwipeLeft={() => handleSwipeLeft(word.id, word.known)}
+                disabled={!isMobile}
+                className="relative"
+              >
+                <Card className={`h-full transition-all duration-300 hover:shadow-xl ${
+                  word.known 
+                    ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200' 
+                    : 'bg-gradient-to-br from-gray-50 to-blue-50 border-gray-200'
+                }`}>
+                  <CardContent className="p-6 text-center space-y-4 relative">
+                    {/* Status Badge */}
+                    <div className="absolute top-2 right-2 flex space-x-1">
+                      {word.isCustom && (
+                        <div className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs font-medium">
+                          Custom
+                        </div>
+                      )}
+                      {word.known && (
+                        <div className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium flex items-center">
+                          <Check className="h-3 w-3 mr-1" />
+                          Known
+                        </div>
+                      )}
+                    </div>
 
                   {/* Word Image */}
                   <motion.div
-                    className="w-24 h-24 mx-auto bg-gradient-to-br from-yellow-200 to-orange-200 rounded-2xl flex items-center justify-center shadow-md"
+                    className="w-24 h-24 mx-auto bg-gradient-to-br from-yellow-200 to-orange-200 rounded-2xl flex items-center justify-center shadow-md overflow-hidden"
                     whileHover={{ rotate: [0, -5, 5, 0] }}
                     transition={{ duration: 0.5 }}
                   >
-                    <div className="text-4xl">{word.image}</div>
+                    {word.imageType === 'url' || word.imageType === 'upload' ? (
+                      <ImageFallback
+                        src={word.image}
+                        alt={word.word}
+                        className="w-full h-full object-cover"
+                        fallbackEmoji="❓"
+                        showRetry={true}
+                      />
+                    ) : (
+                      <div className="text-4xl">{word.image}</div>
+                    )}
                   </motion.div>
 
                   {/* Word Text */}
@@ -222,9 +323,21 @@ const WordLibrary = () => {
                     >
                       {word.known ? <X className="h-4 w-4" /> : <Check className="h-4 w-4" />}
                     </Button>
-                  </div>
-                </CardContent>
-              </Card>
+
+                    {/* Edit button for custom words */}
+                    {word.isCustom && (
+                      <Button
+                        onClick={() => handleEditWord(word)}
+                        size="sm"
+                        className="bg-purple-500 hover:bg-purple-600 text-white rounded-full w-10 h-10 p-0"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </SwipeableCard>
             </motion.div>
           ))}
         </AnimatePresence>
@@ -243,6 +356,70 @@ const WordLibrary = () => {
           <p className="text-purple-600">Try adjusting your search or filters</p>
         </motion.div>
       )}
+
+      {/* Success Notifications */}
+      <AnimatePresence>
+        {uploadSuccess && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className="fixed bottom-4 right-4 bg-green-500 text-white p-4 rounded-lg shadow-lg z-40"
+          >
+            <div className="flex items-center">
+              <Check className="h-5 w-5 mr-2" />
+              <span>Word "{uploadSuccess.word}" added successfully!</span>
+            </div>
+          </motion.div>
+        )}
+        
+        {editSuccess && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className={`fixed bottom-4 right-4 p-4 rounded-lg shadow-lg z-40 text-white ${
+              editSuccess.action === 'deleted' ? 'bg-red-500' : 'bg-blue-500'
+            }`}
+          >
+            <div className="flex items-center">
+              {editSuccess.action === 'deleted' ? (
+                <Trash2 className="h-5 w-5 mr-2" />
+              ) : (
+                <Edit className="h-5 w-5 mr-2" />
+              )}
+              <span>
+                Word "{editSuccess.word}" {editSuccess.action === 'deleted' ? 'deleted' : 'updated'} successfully!
+              </span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Upload Modal */}
+      <AnimatePresence>
+        {showUploadModal && (
+          <WordUpload
+            onClose={() => setShowUploadModal(false)}
+            onSuccess={handleUploadSuccess}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Edit Modal */}
+      <AnimatePresence>
+        {showEditModal && editingWord && (
+          <WordEdit
+            word={editingWord}
+            onClose={() => {
+              setShowEditModal(false)
+              setEditingWord(null)
+            }}
+            onSuccess={handleEditSuccess}
+            onDelete={handleDeleteWord}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

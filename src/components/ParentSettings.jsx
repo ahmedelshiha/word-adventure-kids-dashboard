@@ -1,9 +1,10 @@
-import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from './ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { Input } from './ui/input'
 import { Switch } from './ui/switch'
+import { Label } from './ui/label'
 import { useAuth, useApp } from '../App'
 import { 
   Settings, 
@@ -14,23 +15,98 @@ import {
   Download,
   Upload,
   RotateCcw,
-  Save
+  Save,
+  Lock,
+  Unlock,
+  Eye,
+  EyeOff,
+  AlertCircle,
+  FileText
 } from 'lucide-react'
 
 const ParentSettings = () => {
   const { user } = useAuth()
-  const { words, setWords, resetTest } = useApp()
+  const { words, setWords, resetTest, testResults } = useApp()
+  
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [passwordError, setPasswordError] = useState('')
+  const [isSettingPassword, setIsSettingPassword] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   
   const [settings, setSettings] = useState({
     soundEnabled: true,
     autoAdvance: false,
     showDifficulty: true,
+    showHints: true,
+    showEmojis: true,
     darkMode: false,
     childName: user?.username || '',
-    dailyGoal: 5
+    dailyGoal: 5,
+    passwordProtected: false
   })
 
   const [showResetConfirm, setShowResetConfirm] = useState(false)
+
+  useEffect(() => {
+    // Load saved settings
+    const savedSettings = localStorage.getItem('word_adventure_settings')
+    if (savedSettings) {
+      try {
+        const parsed = JSON.parse(savedSettings)
+        setSettings(prev => ({ ...prev, ...parsed }))
+      } catch (error) {
+        console.error('Error loading settings:', error)
+      }
+    }
+    
+    // Check if password protection is enabled
+    const hasPassword = localStorage.getItem('word_adventure_parent_password')
+    if (hasPassword && settings.passwordProtected) {
+      setIsAuthenticated(false)
+    } else {
+      setIsAuthenticated(true)
+    }
+  }, [])
+
+  const handlePasswordSubmit = () => {
+    const savedPassword = localStorage.getItem('word_adventure_parent_password')
+    if (savedPassword === password) {
+      setIsAuthenticated(true)
+      setPasswordError('')
+      setPassword('')
+    } else {
+      setPasswordError('Incorrect password. Please try again.')
+    }
+  }
+
+  const handleSetPassword = () => {
+    if (newPassword.length < 4) {
+      setPasswordError('Password must be at least 4 characters long.')
+      return
+    }
+    
+    if (newPassword !== confirmPassword) {
+      setPasswordError('Passwords do not match.')
+      return
+    }
+    
+    localStorage.setItem('word_adventure_parent_password', newPassword)
+    setSettings(prev => ({ ...prev, passwordProtected: true }))
+    setIsSettingPassword(false)
+    setNewPassword('')
+    setConfirmPassword('')
+    setPasswordError('')
+    alert('Password set successfully! 🔒')
+  }
+
+  const removePassword = () => {
+    localStorage.removeItem('word_adventure_parent_password')
+    setSettings(prev => ({ ...prev, passwordProtected: false }))
+    alert('Password protection removed! 🔓')
+  }
 
   const handleSettingChange = (key, value) => {
     setSettings(prev => ({ ...prev, [key]: value }))
@@ -61,6 +137,7 @@ const ParentSettings = () => {
     const data = {
       words,
       settings,
+      testResults,
       exportDate: new Date().toISOString(),
       user: user?.username
     }
@@ -70,6 +147,31 @@ const ParentSettings = () => {
     const a = document.createElement('a')
     a.href = url
     a.download = `word-adventure-backup-${new Date().toISOString().split('T')[0]}.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
+  const exportProgressCSV = () => {
+    // Create CSV content
+    const headers = ['Word', 'Known', 'Difficulty', 'Custom', 'Date Added']
+    const csvContent = [
+      headers.join(','),
+      ...words.map(word => [
+        `"${word.word}"`,
+        word.known ? 'Yes' : 'No',
+        word.difficulty,
+        word.isCustom ? 'Yes' : 'No',
+        word.dateAdded || 'N/A'
+      ].join(','))
+    ].join('\n')
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `word-adventure-progress-${new Date().toISOString().split('T')[0]}.csv`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
@@ -144,6 +246,20 @@ const ParentSettings = () => {
           type: 'switch',
           value: settings.showDifficulty,
           description: 'Display difficulty level for each word'
+        },
+        {
+          key: 'showHints',
+          label: 'Show Hints',
+          type: 'switch',
+          value: settings.showHints,
+          description: 'Show helpful hints during learning'
+        },
+        {
+          key: 'showEmojis',
+          label: 'Show Emojis',
+          type: 'switch',
+          value: settings.showEmojis,
+          description: 'Display emoji images for words'
         }
       ]
     },
@@ -164,28 +280,93 @@ const ParentSettings = () => {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="text-center"
-      >
-        <h1 className="text-4xl font-bold text-purple-800 mb-2 text-fun-shadow flex items-center justify-center">
-          <Settings className="h-10 w-10 mr-3" />
-          Settings 
-          <motion.span 
-            className="ml-2"
-            animate={{ rotate: [0, 10, -10, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
+      {/* Password Protection */}
+      {!isAuthenticated && settings.passwordProtected && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+        >
+          <Card className="w-full max-w-md bg-white shadow-2xl">
+            <CardHeader className="bg-gradient-to-r from-red-500 to-pink-500 text-white">
+              <CardTitle className="text-xl font-bold flex items-center">
+                <Lock className="h-6 w-6 mr-2" />
+                Parent Access Required
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 space-y-4">
+              <p className="text-gray-600">
+                This section is password protected. Please enter the parent password to continue.
+              </p>
+              
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handlePasswordSubmit()}
+                    placeholder="Enter password"
+                    className={passwordError ? 'border-red-500' : ''}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                </div>
+                {passwordError && (
+                  <p className="text-sm text-red-500 flex items-center">
+                    <AlertCircle className="h-4 w-4 mr-1" />
+                    {passwordError}
+                  </p>
+                )}
+              </div>
+              
+              <Button
+                onClick={handlePasswordSubmit}
+                className="w-full bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600"
+                disabled={!password}
+              >
+                <Unlock className="h-4 w-4 mr-2" />
+                Access Settings
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* Main Settings Content */}
+      {isAuthenticated && (
+        <>
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center"
           >
-            ⚙️
-          </motion.span>
-        </h1>
-        <p className="text-lg text-purple-600">
-          Customize your Word Adventure experience
-        </p>
-      </motion.div>
+            <h1 className="text-4xl font-bold text-purple-800 mb-2 text-fun-shadow flex items-center justify-center">
+              <Settings className="h-10 w-10 mr-3" />
+              Parent Settings 
+              <motion.span 
+                className="ml-2"
+                animate={{ rotate: [0, 10, -10, 0] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                ⚙️
+              </motion.span>
+            </h1>
+            <p className="text-lg text-purple-600">
+              Customize your child's Word Adventure experience
+            </p>
+          </motion.div>
 
       {/* Settings Sections */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -252,11 +433,116 @@ const ParentSettings = () => {
         ))}
       </div>
 
-      {/* Data Management */}
+      {/* Password Management */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.3 }}
+      >
+        <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-xl text-purple-800 flex items-center">
+              <Lock className="h-6 w-6 mr-2" />
+              Password Protection
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {!settings.passwordProtected ? (
+              <div className="space-y-4">
+                <p className="text-gray-600">
+                  Set a password to protect parent settings from unauthorized access.
+                </p>
+                
+                {!isSettingPassword ? (
+                  <Button
+                    onClick={() => setIsSettingPassword(true)}
+                    className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white"
+                  >
+                    <Lock className="h-4 w-4 mr-2" />
+                    Set Password
+                  </Button>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="newPassword">New Password</Label>
+                        <Input
+                          id="newPassword"
+                          type="password"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          placeholder="Enter new password"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="confirmPassword">Confirm Password</Label>
+                        <Input
+                          id="confirmPassword"
+                          type="password"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          placeholder="Confirm password"
+                        />
+                      </div>
+                    </div>
+                    
+                    {passwordError && (
+                      <p className="text-sm text-red-500 flex items-center">
+                        <AlertCircle className="h-4 w-4 mr-1" />
+                        {passwordError}
+                      </p>
+                    )}
+                    
+                    <div className="flex space-x-2">
+                      <Button
+                        onClick={handleSetPassword}
+                        className="bg-green-500 hover:bg-green-600 text-white"
+                      >
+                        Set Password
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          setIsSettingPassword(false)
+                          setNewPassword('')
+                          setConfirmPassword('')
+                          setPasswordError('')
+                        }}
+                        variant="outline"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                  <div className="flex items-center">
+                    <Lock className="h-5 w-5 text-green-600 mr-2" />
+                    <span className="text-green-700 font-medium">Password protection is enabled</span>
+                  </div>
+                  <Button
+                    onClick={removePassword}
+                    variant="outline"
+                    size="sm"
+                    className="text-red-600 border-red-300 hover:bg-red-50"
+                  >
+                    <Unlock className="h-4 w-4 mr-1" />
+                    Remove
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Data Management */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.4 }}
       >
         <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg">
           <CardHeader>
@@ -266,13 +552,21 @@ const ParentSettings = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <Button
                 onClick={exportProgress}
                 className="btn-fun bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white"
               >
                 <Download className="h-5 w-5 mr-2" />
-                Export Progress
+                Export JSON
+              </Button>
+              
+              <Button
+                onClick={exportProgressCSV}
+                className="btn-fun bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white"
+              >
+                <FileText className="h-5 w-5 mr-2" />
+                Export CSV
               </Button>
               
               <div className="relative">
@@ -283,10 +577,10 @@ const ParentSettings = () => {
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 />
                 <Button
-                  className="w-full btn-fun bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white"
+                  className="w-full btn-fun bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
                 >
                   <Upload className="h-5 w-5 mr-2" />
-                  Import Progress
+                  Import Data
                 </Button>
               </div>
               
@@ -339,7 +633,7 @@ const ParentSettings = () => {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.6, delay: 0.5 }}
+        transition={{ duration: 0.6, delay: 0.6 }}
         className="bg-gradient-to-r from-purple-100 to-pink-100 p-6 rounded-2xl"
       >
         <h3 className="text-lg font-semibold text-purple-800 mb-2 flex items-center">
@@ -351,8 +645,11 @@ const ParentSettings = () => {
           <p>🚫 No personal information is shared online</p>
           <p>👨‍👩‍👧‍👦 Designed with child safety in mind</p>
           <p>📱 Works offline after initial load</p>
+          <p>🛡️ Password protection available for parent settings</p>
         </div>
       </motion.div>
+        </>
+      )}
     </div>
   )
 }

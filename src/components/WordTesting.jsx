@@ -5,6 +5,7 @@ import { Button } from './ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { Progress } from './ui/progress'
 import { useApp } from '../App'
+import ImageFallback from './ImageFallback'
 import { 
   Volume2, 
   Check, 
@@ -12,7 +13,8 @@ import {
   Brain,
   ArrowRight,
   RotateCcw,
-  Home
+  Home,
+  HelpCircle
 } from 'lucide-react'
 
 const WordTesting = () => {
@@ -223,19 +225,24 @@ const WordTesting = () => {
         className="max-w-2xl mx-auto"
       >
         <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-2xl overflow-hidden">
-          <CardContent className="p-8 text-center space-y-8">
-            {/* Word Image */}
-            <motion.div
-              className="w-64 h-64 mx-auto bg-gradient-to-br from-yellow-200 to-orange-200 rounded-3xl flex items-center justify-center shadow-lg"
-              key={currentWord.id}
-              initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: "spring", stiffness: 200, damping: 20 }}
-            >
-              <div className="text-9xl">{currentWord.image}</div>
-            </motion.div>
-
-            {/* Word Text */}
+          <CardContent className="p-8 text-center space-y-8">                  {/* Word Image */}
+                  <motion.div
+                    className="w-48 h-48 mx-auto bg-gradient-to-br from-yellow-200 to-orange-200 rounded-3xl flex items-center justify-center shadow-2xl overflow-hidden"
+                    whileHover={{ scale: 1.05 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {currentWord.imageType === 'url' || currentWord.imageType === 'upload' ? (
+                      <ImageFallback
+                        src={currentWord.image}
+                        alt={currentWord.word}
+                        className="w-full h-full object-cover"
+                        fallbackEmoji="❓"
+                        showRetry={true}
+                      />
+                    ) : (
+                      <div className="text-8xl">{currentWord.image}</div>
+                    )}
+                  </motion.div>         {/* Word Text */}
             <motion.h2 
               className="text-6xl font-bold text-gray-800 text-fun-shadow"
               key={`word-${currentWord.id}`}

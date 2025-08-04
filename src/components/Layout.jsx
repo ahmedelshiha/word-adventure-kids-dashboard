@@ -13,7 +13,8 @@ import {
   Menu, 
   X,
   User,
-  Star
+  Star,
+  BarChart3
 } from 'lucide-react'
 
 const Layout = ({ children }) => {
@@ -28,6 +29,7 @@ const Layout = ({ children }) => {
     { path: '/library', icon: BookOpen, label: 'Word Library', emoji: '📚' },
     { path: '/test', icon: Brain, label: 'Quiz Time', emoji: '🧠' },
     { path: '/results', icon: Trophy, label: 'Results', emoji: '🏆' },
+    { path: '/progress', icon: BarChart3, label: 'Progress', emoji: '📊' },
     { path: '/settings', icon: Settings, label: 'Settings', emoji: '⚙️' }
   ]
 
