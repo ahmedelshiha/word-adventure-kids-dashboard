@@ -101,6 +101,19 @@ const WordTesting = () => {
     navigate('/')
   }
 
+  const handleCategoryToggle = (categoryId) => {
+    setSelectedQuizCategories(prev =>
+      prev.includes(categoryId)
+        ? prev.filter(id => id !== categoryId)
+        : [...prev, categoryId]
+    )
+  }
+
+  const startQuizWithCategories = () => {
+    setShowCategorySelection(false)
+    startTest()
+  }
+
   if (!testStarted) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center">
