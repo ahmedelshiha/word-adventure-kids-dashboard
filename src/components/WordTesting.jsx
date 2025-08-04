@@ -181,10 +181,7 @@ const WordTesting = () => {
               
               <div className="space-y-3">
                 <Button
-                  onClick={() => {
-                    console.log('Category selection button clicked')
-                    setShowCategorySelection(true)
-                  }}
+                  onClick={() => setShowCategorySelection(true)}
                   variant="outline"
                   className="w-full h-12 text-lg font-semibold btn-fun border-2 border-purple-300 text-purple-700 hover:bg-purple-50"
                 >
