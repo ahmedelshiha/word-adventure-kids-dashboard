@@ -44,6 +44,8 @@ const WordTesting = () => {
 
   useEffect(() => {
     setIsTestMode(true)
+    // Clear selected categories when component mounts to start fresh
+    setSelectedQuizCategories([])
     if (quizWords.length > 0 && currentWordIndex < quizWords.length) {
       setCurrentWord(quizWords[currentWordIndex])
     }
@@ -51,7 +53,7 @@ const WordTesting = () => {
     return () => {
       setIsTestMode(false)
     }
-  }, [quizWords, currentWordIndex, setIsTestMode])
+  }, [setIsTestMode])
 
   const progress = quizWords.length > 0 ? ((currentWordIndex + 1) / quizWords.length) * 100 : 0
 
