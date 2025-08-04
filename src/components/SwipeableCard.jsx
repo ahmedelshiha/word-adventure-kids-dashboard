@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { motion, useMotionValue, useTransform, PanInfo } from 'framer-motion'
+import { motion, useMotionValue, useTransform } from 'framer-motion'
 
 const SwipeableCard = ({ 
   children, 
@@ -82,4 +82,3 @@ const SwipeableCard = ({
 }
 
 export default SwipeableCard
-
