@@ -394,6 +394,11 @@ const WordTesting = () => {
         </Button>
       </motion.div>
 
+      {/* Debug state */}
+      <div className="fixed top-4 right-4 bg-red-500 text-white p-2 rounded z-50">
+        Modal State: {showCategorySelection ? 'TRUE' : 'FALSE'}
+      </div>
+
       {/* Category Selection Modal */}
       {showCategorySelection && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
