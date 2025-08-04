@@ -34,27 +34,41 @@ export const useApp = () => {
   return context
 }
 
+// Default categories
+const defaultCategories = [
+  { id: 'food', name: 'Food', emoji: '🍎', color: 'from-red-400 to-orange-400' },
+  { id: 'animals', name: 'Animals', emoji: '🐱', color: 'from-green-400 to-blue-400' },
+  { id: 'objects', name: 'Objects', emoji: '🏠', color: 'from-purple-400 to-pink-400' },
+  { id: 'nature', name: 'Nature', emoji: '🌳', color: 'from-green-400 to-emerald-400' },
+  { id: 'body', name: 'Body Parts', emoji: '👁️', color: 'from-yellow-400 to-red-400' },
+  { id: 'colors', name: 'Colors', emoji: '🌈', color: 'from-pink-400 to-purple-400' },
+  { id: 'numbers', name: 'Numbers', emoji: '🔢', color: 'from-blue-400 to-indigo-400' },
+  { id: 'actions', name: 'Actions', emoji: '🏃', color: 'from-orange-400 to-red-400' }
+]
+
 // Sample words data for demo
 const sampleWords = [
-  { id: 1, word: 'Apple', image: '🍎', known: false, difficulty: 'easy' },
-  { id: 2, word: 'Banana', image: '🍌', known: false, difficulty: 'easy' },
-  { id: 3, word: 'Cat', image: '🐱', known: true, difficulty: 'easy' },
-  { id: 4, word: 'Dog', image: '🐶', known: true, difficulty: 'easy' },
-  { id: 5, word: 'Elephant', image: '🐘', known: false, difficulty: 'medium' },
-  { id: 6, word: 'Fish', image: '🐟', known: false, difficulty: 'easy' },
-  { id: 7, word: 'Giraffe', image: '🦒', known: false, difficulty: 'medium' },
-  { id: 8, word: 'House', image: '🏠', known: true, difficulty: 'easy' },
-  { id: 9, word: 'Ice cream', image: '🍦', known: true, difficulty: 'easy' },
-  { id: 10, word: 'Jellyfish', image: '🪼', known: false, difficulty: 'hard' }
+  { id: 1, word: 'Apple', image: '🍎', known: false, difficulty: 'easy', category: 'food' },
+  { id: 2, word: 'Banana', image: '🍌', known: false, difficulty: 'easy', category: 'food' },
+  { id: 3, word: 'Cat', image: '🐱', known: true, difficulty: 'easy', category: 'animals' },
+  { id: 4, word: 'Dog', image: '🐶', known: true, difficulty: 'easy', category: 'animals' },
+  { id: 5, word: 'Elephant', image: '🐘', known: false, difficulty: 'medium', category: 'animals' },
+  { id: 6, word: 'Fish', image: '🐟', known: false, difficulty: 'easy', category: 'animals' },
+  { id: 7, word: 'Giraffe', image: '🦒', known: false, difficulty: 'medium', category: 'animals' },
+  { id: 8, word: 'House', image: '🏠', known: true, difficulty: 'easy', category: 'objects' },
+  { id: 9, word: 'Ice cream', image: '🍦', known: true, difficulty: 'easy', category: 'food' },
+  { id: 10, word: 'Jellyfish', image: '🪼', known: false, difficulty: 'hard', category: 'animals' }
 ]
 
 function App() {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [words, setWords] = useState(sampleWords)
+  const [categories, setCategories] = useState(defaultCategories)
   const [currentWordIndex, setCurrentWordIndex] = useState(0)
   const [testResults, setTestResults] = useState([])
   const [isTestMode, setIsTestMode] = useState(false)
+  const [selectedQuizCategories, setSelectedQuizCategories] = useState([])
 
   // Check for existing session on app load
   useEffect(() => {
@@ -87,6 +101,16 @@ function App() {
         console.error('Error parsing saved test results:', error)
       }
     }
+
+    // Load saved categories
+    const savedCategories = localStorage.getItem('word_adventure_categories')
+    if (savedCategories) {
+      try {
+        setCategories(JSON.parse(savedCategories))
+      } catch (error) {
+        console.error('Error parsing saved categories:', error)
+      }
+    }
     
     setLoading(false)
   }, [])
@@ -100,6 +124,11 @@ function App() {
   useEffect(() => {
     localStorage.setItem('word_adventure_test_results', JSON.stringify(testResults))
   }, [testResults])
+
+  // Save categories whenever they change
+  useEffect(() => {
+    localStorage.setItem('word_adventure_categories', JSON.stringify(categories))
+  }, [categories])
 
   const login = async (username, password) => {
     // Demo login - in real app this would call an API
@@ -145,6 +174,46 @@ function App() {
     setIsTestMode(false)
   }
 
+  const addCategory = (newCategory) => {
+    const categoryWithId = {
+      ...newCategory,
+      id: `custom_${Date.now()}`
+    }
+    setCategories(prev => [...prev, categoryWithId])
+    return categoryWithId
+  }
+
+  const updateCategory = (categoryId, updatedCategory) => {
+    setCategories(prev =>
+      prev.map(cat =>
+        cat.id === categoryId ? { ...cat, ...updatedCategory } : cat
+      )
+    )
+  }
+
+  const deleteCategory = (categoryId) => {
+    // Don't allow deleting default categories
+    const isDefault = defaultCategories.some(cat => cat.id === categoryId)
+    if (isDefault) return
+
+    // Remove category from words first
+    setWords(prev =>
+      prev.map(word =>
+        word.category === categoryId ? { ...word, category: 'objects' } : word
+      )
+    )
+
+    // Remove category
+    setCategories(prev => prev.filter(cat => cat.id !== categoryId))
+  }
+
+  const getFilteredWordsForQuiz = () => {
+    if (selectedQuizCategories.length === 0) {
+      return words
+    }
+    return words.filter(word => selectedQuizCategories.includes(word.category))
+  }
+
   const authValue = {
     user,
     login,
@@ -155,15 +224,23 @@ function App() {
   const appValue = {
     words,
     setWords,
+    categories,
+    setCategories,
     currentWordIndex,
     setCurrentWordIndex,
     testResults,
     setTestResults,
     isTestMode,
     setIsTestMode,
+    selectedQuizCategories,
+    setSelectedQuizCategories,
     updateWordStatus,
     addTestResult,
-    resetTest
+    resetTest,
+    addCategory,
+    updateCategory,
+    deleteCategory,
+    getFilteredWordsForQuiz
   }
 
   if (loading) {
@@ -212,4 +289,3 @@ function AuthenticatedApp() {
 }
 
 export default App
-

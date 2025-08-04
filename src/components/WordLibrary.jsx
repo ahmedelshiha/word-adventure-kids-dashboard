@@ -6,6 +6,7 @@ import { Input } from './ui/input'
 import { useApp } from '../App'
 import WordUpload from './WordUpload'
 import WordEdit from './WordEdit'
+import CategoryManager from './CategoryManager'
 import LoadingState from './LoadingState'
 import ImageFallback from './ImageFallback'
 import SwipeableCard from './SwipeableCard'
@@ -24,11 +25,13 @@ import {
 } from 'lucide-react'
 
 const WordLibrary = () => {
-  const { words, updateWordStatus, setWords } = useApp()
+  const { words, updateWordStatus, setWords, categories } = useApp()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedDifficulty, setSelectedDifficulty] = useState('all')
   const [selectedStatus, setSelectedStatus] = useState('all')
+  const [selectedCategory, setSelectedCategory] = useState('all')
   const [showUploadModal, setShowUploadModal] = useState(false)
+  const [showCategoryModal, setShowCategoryModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingWord, setEditingWord] = useState(null)
   const [uploadSuccess, setUploadSuccess] = useState(null)
@@ -39,11 +42,12 @@ const WordLibrary = () => {
   const filteredWords = words.filter(word => {
     const matchesSearch = word.word.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesDifficulty = selectedDifficulty === 'all' || word.difficulty === selectedDifficulty
-    const matchesStatus = selectedStatus === 'all' || 
+    const matchesStatus = selectedStatus === 'all' ||
       (selectedStatus === 'known' && word.known) ||
       (selectedStatus === 'unknown' && !word.known)
-    
-    return matchesSearch && matchesDifficulty && matchesStatus
+    const matchesCategory = selectedCategory === 'all' || word.category === selectedCategory
+
+    return matchesSearch && matchesDifficulty && matchesStatus && matchesCategory
   })
 
   const speakWord = (word) => {
@@ -107,6 +111,7 @@ const WordLibrary = () => {
 
   const difficulties = ['all', 'easy', 'medium', 'hard']
   const statuses = ['all', 'known', 'unknown']
+  const categoryOptions = [{ id: 'all', name: 'All Categories', emoji: '📚' }, ...categories]
 
   return (
     <div className="space-y-6">
@@ -144,14 +149,24 @@ const WordLibrary = () => {
       </motion.div>
 
       <div className="flex justify-between items-center mb-6">
-        {/* Add Word Button */}
-        <Button
-          onClick={() => setShowUploadModal(true)}
-          className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-semibold px-6 py-3 rounded-full shadow-lg transform hover:scale-105 transition-all duration-200"
-        >
-          <Plus className="h-5 w-5 mr-2" />
-          Add New Word
-        </Button>
+        {/* Action Buttons */}
+        <div className="flex space-x-3">
+          <Button
+            onClick={() => setShowUploadModal(true)}
+            className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-semibold px-6 py-3 rounded-full shadow-lg transform hover:scale-105 transition-all duration-200"
+          >
+            <Plus className="h-5 w-5 mr-2" />
+            Add New Word
+          </Button>
+
+          <Button
+            onClick={() => setShowCategoryModal(true)}
+            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold px-6 py-3 rounded-full shadow-lg transform hover:scale-105 transition-all duration-200"
+          >
+            <BookOpen className="h-5 w-5 mr-2" />
+            Manage Categories
+          </Button>
+        </div>
       </div>
 
       {/* Search and Filters */}
@@ -204,12 +219,32 @@ const WordLibrary = () => {
                   variant={selectedStatus === status ? "default" : "outline"}
                   size="sm"
                   className={`rounded-full ${
-                    selectedStatus === status 
-                      ? 'bg-purple-500 text-white' 
+                    selectedStatus === status
+                      ? 'bg-purple-500 text-white'
                       : 'text-purple-600 border-purple-300'
                   }`}
                 >
                   {status.charAt(0).toUpperCase() + status.slice(1)}
+                </Button>
+              ))}
+            </div>
+
+            <div className="flex items-center space-x-2 flex-wrap">
+              <span className="text-purple-700 font-medium">Category:</span>
+              {categoryOptions.map((category) => (
+                <Button
+                  key={category.id}
+                  onClick={() => setSelectedCategory(category.id)}
+                  variant={selectedCategory === category.id ? "default" : "outline"}
+                  size="sm"
+                  className={`rounded-full ${
+                    selectedCategory === category.id
+                      ? 'bg-purple-500 text-white'
+                      : 'text-purple-600 border-purple-300'
+                  }`}
+                >
+                  <span className="mr-1">{category.emoji}</span>
+                  {category.name}
                 </Button>
               ))}
             </div>
@@ -286,7 +321,7 @@ const WordLibrary = () => {
                         src={word.image}
                         alt={word.word}
                         className="w-full h-full object-cover"
-                        fallbackEmoji="❓"
+                        fallbackEmoji="��"
                         showRetry={true}
                       />
                     ) : (
@@ -297,9 +332,21 @@ const WordLibrary = () => {
                   {/* Word Text */}
                   <h3 className="text-xl font-bold text-gray-800">{word.word}</h3>
 
-                  {/* Difficulty Badge */}
-                  <div className={`inline-block px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r ${difficultyColors[word.difficulty]} text-white`}>
-                    {word.difficulty.charAt(0).toUpperCase() + word.difficulty.slice(1)}
+                  {/* Category and Difficulty Badges */}
+                  <div className="flex justify-center space-x-2 flex-wrap">
+                    {word.category && (
+                      <div className={`inline-block px-2 py-1 rounded-full text-xs font-semibold bg-gradient-to-r ${
+                        categories.find(cat => cat.id === word.category)?.color || 'from-gray-400 to-gray-500'
+                      } text-white`}>
+                        <span className="mr-1">
+                          {categories.find(cat => cat.id === word.category)?.emoji || '📂'}
+                        </span>
+                        {categories.find(cat => cat.id === word.category)?.name || 'Other'}
+                      </div>
+                    )}
+                    <div className={`inline-block px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r ${difficultyColors[word.difficulty]} text-white`}>
+                      {word.difficulty.charAt(0).toUpperCase() + word.difficulty.slice(1)}
+                    </div>
                   </div>
 
                   {/* Action Buttons */}
@@ -420,9 +467,17 @@ const WordLibrary = () => {
           />
         )}
       </AnimatePresence>
+
+      {/* Category Manager Modal */}
+      <AnimatePresence>
+        {showCategoryModal && (
+          <CategoryManager
+            onClose={() => setShowCategoryModal(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }
 
 export default WordLibrary
-

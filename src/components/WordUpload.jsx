@@ -18,11 +18,12 @@ import {
 } from 'lucide-react'
 
 const WordUpload = ({ onClose, onSuccess }) => {
-  const { words, setWords } = useApp()
+  const { words, setWords, categories } = useApp()
   const [formData, setFormData] = useState({
     word: '',
     definition: '',
     difficulty: 'easy',
+    category: categories.length > 0 ? categories[0].id : '',
     imageType: 'emoji', // 'emoji', 'upload', 'url'
     image: '',
     imageUrl: '',
@@ -41,6 +42,10 @@ const WordUpload = ({ onClose, onSuccess }) => {
     
     if (!formData.definition.trim()) {
       newErrors.definition = 'Definition is required'
+    }
+
+    if (!formData.category) {
+      newErrors.category = 'Category is required'
     }
     
     if (formData.imageType === 'url' && !formData.imageUrl.trim()) {
@@ -140,6 +145,7 @@ const WordUpload = ({ onClose, onSuccess }) => {
         word: formData.word.trim(),
         definition: formData.definition.trim(),
         difficulty: formData.difficulty,
+        category: formData.category,
         known: false,
         isCustom: true,
         dateAdded: new Date().toISOString()
@@ -173,6 +179,7 @@ const WordUpload = ({ onClose, onSuccess }) => {
         word: '',
         definition: '',
         difficulty: 'easy',
+        category: categories.length > 0 ? categories[0].id : '',
         imageType: 'emoji',
         image: '',
         imageUrl: '',
@@ -392,6 +399,35 @@ const WordUpload = ({ onClose, onSuccess }) => {
                 )}
               </div>
 
+              {/* Category */}
+              <div className="space-y-2">
+                <Label htmlFor="category">Category *</Label>
+                <Select
+                  value={formData.category}
+                  onValueChange={(value) => handleInputChange('category', value)}
+                >
+                  <SelectTrigger className={errors.category ? 'border-red-500' : ''}>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        <div className="flex items-center">
+                          <span className="mr-2">{category.emoji}</span>
+                          {category.name}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.category && (
+                  <p className="text-sm text-red-500 flex items-center">
+                    <AlertCircle className="h-4 w-4 mr-1" />
+                    {errors.category}
+                  </p>
+                )}
+              </div>
+
               {/* Difficulty Level */}
               <div className="space-y-2">
                 <Label htmlFor="difficulty">Difficulty Level</Label>
@@ -506,4 +542,3 @@ const WordUpload = ({ onClose, onSuccess }) => {
 }
 
 export default WordUpload
-

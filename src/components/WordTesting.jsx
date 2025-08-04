@@ -6,46 +6,59 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { Progress } from './ui/progress'
 import { useApp } from '../App'
 import ImageFallback from './ImageFallback'
-import { 
-  Volume2, 
-  Check, 
-  X, 
+import {
+  Volume2,
+  Check,
+  X,
   Brain,
   ArrowRight,
   RotateCcw,
   Home,
-  HelpCircle
+  HelpCircle,
+  Filter
 } from 'lucide-react'
 
 const WordTesting = () => {
   const navigate = useNavigate()
-  const { 
-    words, 
-    currentWordIndex, 
-    setCurrentWordIndex, 
-    testResults, 
-    addTestResult, 
+  const {
+    words,
+    categories,
+    currentWordIndex,
+    setCurrentWordIndex,
+    testResults,
+    addTestResult,
     resetTest,
-    setIsTestMode 
+    setIsTestMode,
+    selectedQuizCategories,
+    setSelectedQuizCategories,
+    getFilteredWordsForQuiz
   } = useApp()
   
   const [currentWord, setCurrentWord] = useState(null)
   const [showResult, setShowResult] = useState(false)
   const [lastAnswer, setLastAnswer] = useState(null)
   const [testStarted, setTestStarted] = useState(false)
+  const [showCategorySelection, setShowCategorySelection] = useState(false)
+
+  const quizWords = getFilteredWordsForQuiz()
 
   useEffect(() => {
     setIsTestMode(true)
-    if (words.length > 0 && currentWordIndex < words.length) {
-      setCurrentWord(words[currentWordIndex])
-    }
-    
+    // Clear selected categories when component mounts to start fresh
+    setSelectedQuizCategories([])
+
     return () => {
       setIsTestMode(false)
     }
-  }, [words, currentWordIndex, setIsTestMode])
+  }, [setIsTestMode, setSelectedQuizCategories])
 
-  const progress = words.length > 0 ? ((currentWordIndex + 1) / words.length) * 100 : 0
+  useEffect(() => {
+    if (quizWords.length > 0 && currentWordIndex < quizWords.length) {
+      setCurrentWord(quizWords[currentWordIndex])
+    }
+  }, [quizWords, currentWordIndex])
+
+  const progress = quizWords.length > 0 ? ((currentWordIndex + 1) / quizWords.length) * 100 : 0
 
   const speakWord = () => {
     if ('speechSynthesis' in window && currentWord) {
@@ -68,7 +81,7 @@ const WordTesting = () => {
       setShowResult(false)
       setLastAnswer(null)
       
-      if (currentWordIndex < words.length - 1) {
+      if (currentWordIndex < quizWords.length - 1) {
         setCurrentWordIndex(currentWordIndex + 1)
       } else {
         // Test completed
@@ -92,6 +105,19 @@ const WordTesting = () => {
 
   const goHome = () => {
     navigate('/')
+  }
+
+  const handleCategoryToggle = (categoryId) => {
+    setSelectedQuizCategories(prev =>
+      prev.includes(categoryId)
+        ? prev.filter(id => id !== categoryId)
+        : [...prev, categoryId]
+    )
+  }
+
+  const startQuizWithCategories = () => {
+    setShowCategorySelection(false)
+    startTest()
   }
 
   if (!testStarted) {
@@ -130,20 +156,57 @@ const WordTesting = () => {
                 </p>
                 <div className="bg-purple-50 p-4 rounded-xl">
                   <p className="text-sm text-purple-700">
-                    📝 You'll see {words.length} words<br/>
+                    📝 You'll see {quizWords.length} words<br/>
                     🎯 Mark if you remember each one<br/>
                     🏆 Get your results at the end
                   </p>
+                  {selectedQuizCategories.length > 0 && (
+                    <div className="mt-2 pt-2 border-t border-purple-200">
+                      <p className="text-xs text-purple-600 mb-1">Selected categories:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {selectedQuizCategories.map(categoryId => {
+                          const category = categories.find(cat => cat.id === categoryId)
+                          return category ? (
+                            <span key={categoryId} className={`inline-block px-2 py-1 rounded-full text-xs font-semibold bg-gradient-to-r ${category.color} text-white`}>
+                              <span className="mr-1">{category.emoji}</span>
+                              {category.name}
+                            </span>
+                          ) : null
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
               
-              <Button
-                onClick={startTest}
-                className="w-full h-12 text-lg font-semibold btn-fun bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
-              >
-                <Brain className="h-5 w-5 mr-2" />
-                Start Quiz
-              </Button>
+              <div className="space-y-3">
+                <Button
+                  onClick={() => {
+                    console.log('Category selection button clicked')
+                    setShowCategorySelection(true)
+                  }}
+                  variant="outline"
+                  className="w-full h-12 text-lg font-semibold btn-fun border-2 border-purple-300 text-purple-700 hover:bg-purple-50"
+                >
+                  <Filter className="h-5 w-5 mr-2" />
+                  Choose Categories ({selectedQuizCategories.length > 0 ? selectedQuizCategories.length + ' selected' : 'All'})
+                </Button>
+
+                <Button
+                  onClick={startTest}
+                  disabled={quizWords.length === 0}
+                  className="w-full h-12 text-lg font-semibold btn-fun bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Brain className="h-5 w-5 mr-2" />
+                  Start Quiz
+                </Button>
+
+                {quizWords.length === 0 && selectedQuizCategories.length > 0 && (
+                  <p className="text-sm text-red-600 text-center">
+                    No words found in selected categories. Please choose different categories.
+                  </p>
+                )}
+              </div>
               
               <Button
                 onClick={goHome}
@@ -199,7 +262,7 @@ const WordTesting = () => {
           </motion.span>
         </h1>
         <p className="text-lg text-purple-600">
-          Word {currentWordIndex + 1} of {words.length}
+          Word {currentWordIndex + 1} of {quizWords.length}
         </p>
       </motion.div>
 
@@ -364,9 +427,135 @@ const WordTesting = () => {
           Back to Dashboard
         </Button>
       </motion.div>
+
+      {/* Category Selection Modal */}
+      <AnimatePresence>
+        {showCategorySelection && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setShowCategorySelection(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-6">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-2xl font-bold flex items-center">
+                    <Filter className="h-6 w-6 mr-2" />
+                    Choose Quiz Categories
+                  </h2>
+                  <Button
+                    onClick={() => setShowCategorySelection(false)}
+                    size="sm"
+                    variant="ghost"
+                    className="text-white hover:bg-white/20"
+                  >
+                    <X className="h-5 w-5" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="p-6 max-h-[60vh] overflow-y-auto">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <p className="text-purple-700">
+                      Select categories for your quiz (leave empty to include all words):
+                    </p>
+                    <div className="flex space-x-2">
+                      <Button
+                        onClick={() => setSelectedQuizCategories([])}
+                        size="sm"
+                        variant="outline"
+                        className="text-purple-600 border-purple-300"
+                      >
+                        Clear All
+                      </Button>
+                      <Button
+                        onClick={() => setSelectedQuizCategories(categories.map(cat => cat.id))}
+                        size="sm"
+                        variant="outline"
+                        className="text-purple-600 border-purple-300"
+                      >
+                        Select All
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {categories.map((category) => {
+                      const isSelected = selectedQuizCategories.includes(category.id)
+                      const wordCount = words.filter(word => word.category === category.id).length
+
+                      return (
+                        <Card
+                          key={category.id}
+                          className={`cursor-pointer transition-all duration-200 relative ${
+                            isSelected
+                              ? 'ring-2 ring-purple-500 bg-purple-50'
+                              : 'hover:shadow-md'
+                          }`}
+                          onClick={() => handleCategoryToggle(category.id)}
+                        >
+                          <CardContent className="p-4 text-center">
+                            <div className={`inline-block px-3 py-2 rounded-full text-sm font-semibold bg-gradient-to-r ${category.color} text-white mb-2`}>
+                              <span className="mr-1">{category.emoji}</span>
+                              {category.name}
+                            </div>
+                            <p className="text-xs text-gray-600">
+                              {wordCount} word{wordCount !== 1 ? 's' : ''}
+                            </p>
+                            {isSelected && (
+                              <div className="absolute top-2 right-2">
+                                <Check className="h-4 w-4 text-purple-500" />
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      )
+                    })}
+                  </div>
+
+                  <div className="flex justify-between items-center pt-4 border-t">
+                    <p className="text-sm text-purple-600">
+                      {selectedQuizCategories.length === 0
+                        ? `All ${words.length} words will be included`
+                        : `${quizWords.length} words selected`
+                      }
+                    </p>
+
+                    <div className="flex space-x-3">
+                      <Button
+                        onClick={() => setShowCategorySelection(false)}
+                        variant="outline"
+                        className="border-gray-300"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={startQuizWithCategories}
+                        disabled={quizWords.length === 0}
+                        className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+                      >
+                        <Brain className="h-4 w-4 mr-2" />
+                        Start Quiz ({quizWords.length} words)
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
 
 export default WordTesting
-
