@@ -181,7 +181,10 @@ const WordTesting = () => {
               
               <div className="space-y-3">
                 <Button
-                  onClick={() => setShowCategorySelection(true)}
+                  onClick={() => {
+                    console.log('Category selection button clicked')
+                    setShowCategorySelection(true)
+                  }}
                   variant="outline"
                   className="w-full h-12 text-lg font-semibold btn-fun border-2 border-purple-300 text-purple-700 hover:bg-purple-50"
                 >
@@ -381,7 +384,7 @@ const WordTesting = () => {
                   }`}
                 >
                   <div className="text-4xl mb-2">
-                    {lastAnswer ? '��' : '💪'}
+                    {lastAnswer ? '🎉' : '💪'}
                   </div>
                   <p className={`text-xl font-semibold ${
                     lastAnswer ? 'text-green-700' : 'text-red-700'
