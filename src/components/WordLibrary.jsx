@@ -24,7 +24,7 @@ import {
 } from 'lucide-react'
 
 const WordLibrary = () => {
-  const { words, updateWordStatus, setWords } = useApp()
+  const { words, updateWordStatus, setWords, categories } = useApp()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedDifficulty, setSelectedDifficulty] = useState('all')
   const [selectedStatus, setSelectedStatus] = useState('all')
@@ -425,4 +425,3 @@ const WordLibrary = () => {
 }
 
 export default WordLibrary
-
