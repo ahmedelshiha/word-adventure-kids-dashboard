@@ -43,14 +43,14 @@ const WordTesting = () => {
 
   useEffect(() => {
     setIsTestMode(true)
-    if (words.length > 0 && currentWordIndex < words.length) {
-      setCurrentWord(words[currentWordIndex])
+    if (quizWords.length > 0 && currentWordIndex < quizWords.length) {
+      setCurrentWord(quizWords[currentWordIndex])
     }
-    
+
     return () => {
       setIsTestMode(false)
     }
-  }, [words, currentWordIndex, setIsTestMode])
+  }, [quizWords, currentWordIndex, setIsTestMode])
 
   const progress = words.length > 0 ? ((currentWordIndex + 1) / words.length) * 100 : 0
 
