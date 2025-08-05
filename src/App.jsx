@@ -1,9 +1,10 @@
 import { useState, useEffect, createContext, useContext } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import { wordsDatabase, enhancedCategories } from './data/wordsDatabase'
 import LoginPage from './components/LoginPage'
-import Dashboard from './components/Dashboard'
-import WordLibrary from './components/WordLibrary'
+import Dashboard from './components/EnhancedDashboard'
+import WordLibrary from './components/EnhancedWordLibrary'
 import WordTesting from './components/WordTesting'
 import Results from './components/Results'
 import ProgressDashboard from './components/ProgressDashboard'
@@ -34,41 +35,37 @@ export const useApp = () => {
   return context
 }
 
-// Default categories
-const defaultCategories = [
-  { id: 'food', name: 'Food', emoji: '🍎', color: 'from-red-400 to-orange-400' },
-  { id: 'animals', name: 'Animals', emoji: '🐱', color: 'from-green-400 to-blue-400' },
-  { id: 'objects', name: 'Objects', emoji: '🏠', color: 'from-purple-400 to-pink-400' },
-  { id: 'nature', name: 'Nature', emoji: '🌳', color: 'from-green-400 to-emerald-400' },
-  { id: 'body', name: 'Body Parts', emoji: '👁️', color: 'from-yellow-400 to-red-400' },
-  { id: 'colors', name: 'Colors', emoji: '🌈', color: 'from-pink-400 to-purple-400' },
-  { id: 'numbers', name: 'Numbers', emoji: '🔢', color: 'from-blue-400 to-indigo-400' },
-  { id: 'actions', name: 'Actions', emoji: '🏃', color: 'from-orange-400 to-red-400' }
-]
-
-// Sample words data for demo
-const sampleWords = [
-  { id: 1, word: 'Apple', image: '🍎', known: false, difficulty: 'easy', category: 'food' },
-  { id: 2, word: 'Banana', image: '🍌', known: false, difficulty: 'easy', category: 'food' },
-  { id: 3, word: 'Cat', image: '🐱', known: true, difficulty: 'easy', category: 'animals' },
-  { id: 4, word: 'Dog', image: '🐶', known: true, difficulty: 'easy', category: 'animals' },
-  { id: 5, word: 'Elephant', image: '🐘', known: false, difficulty: 'medium', category: 'animals' },
-  { id: 6, word: 'Fish', image: '🐟', known: false, difficulty: 'easy', category: 'animals' },
-  { id: 7, word: 'Giraffe', image: '🦒', known: false, difficulty: 'medium', category: 'animals' },
-  { id: 8, word: 'House', image: '🏠', known: true, difficulty: 'easy', category: 'objects' },
-  { id: 9, word: 'Ice cream', image: '🍦', known: true, difficulty: 'easy', category: 'food' },
-  { id: 10, word: 'Jellyfish', image: '🪼', known: false, difficulty: 'hard', category: 'animals' }
-]
-
 function App() {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [words, setWords] = useState(sampleWords)
-  const [categories, setCategories] = useState(defaultCategories)
+  const [words, setWords] = useState(wordsDatabase)
+  const [categories, setCategories] = useState(enhancedCategories)
   const [currentWordIndex, setCurrentWordIndex] = useState(0)
   const [testResults, setTestResults] = useState([])
   const [isTestMode, setIsTestMode] = useState(false)
   const [selectedQuizCategories, setSelectedQuizCategories] = useState([])
+  
+  // Enhanced gamification state
+  const [userStats, setUserStats] = useState({
+    xp: 0,
+    level: 1,
+    streak: 0,
+    lastPlayDate: null,
+    achievements: [],
+    totalWordsLearned: 0,
+    totalQuizzesTaken: 0,
+    perfectScores: 0
+  })
+  
+  // Virtual pet state
+  const [virtualPet, setVirtualPet] = useState({
+    name: 'Buddy',
+    type: 'cat',
+    happiness: 100,
+    growth: 0,
+    accessories: [],
+    lastFed: Date.now()
+  })
 
   // Check for existing session on app load
   useEffect(() => {
@@ -86,7 +83,13 @@ function App() {
     const savedWords = localStorage.getItem('word_adventure_words')
     if (savedWords) {
       try {
-        setWords(JSON.parse(savedWords))
+        const parsedWords = JSON.parse(savedWords)
+        // Merge with new database, preserving progress
+        const mergedWords = wordsDatabase.map(word => {
+          const savedWord = parsedWords.find(sw => sw.id === word.id)
+          return savedWord ? { ...word, known: savedWord.known } : word
+        })
+        setWords(mergedWords)
       } catch (error) {
         console.error('Error parsing saved words:', error)
       }
@@ -106,29 +109,119 @@ function App() {
     const savedCategories = localStorage.getItem('word_adventure_categories')
     if (savedCategories) {
       try {
-        setCategories(JSON.parse(savedCategories))
+        const parsedCategories = JSON.parse(savedCategories)
+        // Merge with enhanced categories
+        const mergedCategories = [...enhancedCategories, ...parsedCategories.filter(cat => 
+          !enhancedCategories.some(ec => ec.id === cat.id)
+        )]
+        setCategories(mergedCategories)
       } catch (error) {
         console.error('Error parsing saved categories:', error)
+      }
+    }
+    
+    // Load saved user stats
+    const savedStats = localStorage.getItem('word_adventure_stats')
+    if (savedStats) {
+      try {
+        setUserStats(JSON.parse(savedStats))
+      } catch (error) {
+        console.error('Error parsing saved stats:', error)
+      }
+    }
+    
+    // Load saved virtual pet
+    const savedPet = localStorage.getItem('word_adventure_pet')
+    if (savedPet) {
+      try {
+        setVirtualPet(JSON.parse(savedPet))
+      } catch (error) {
+        console.error('Error parsing saved pet:', error)
       }
     }
     
     setLoading(false)
   }, [])
 
-  // Save words progress whenever it changes
+  // Save data whenever it changes
   useEffect(() => {
     localStorage.setItem('word_adventure_words', JSON.stringify(words))
   }, [words])
 
-  // Save test results whenever they change
   useEffect(() => {
     localStorage.setItem('word_adventure_test_results', JSON.stringify(testResults))
   }, [testResults])
 
-  // Save categories whenever they change
   useEffect(() => {
     localStorage.setItem('word_adventure_categories', JSON.stringify(categories))
   }, [categories])
+  
+  useEffect(() => {
+    localStorage.setItem('word_adventure_stats', JSON.stringify(userStats))
+  }, [userStats])
+  
+  useEffect(() => {
+    localStorage.setItem('word_adventure_pet', JSON.stringify(virtualPet))
+  }, [virtualPet])
+
+  // Gamification functions
+  const addXP = (amount, reason = 'general') => {
+    setUserStats(prev => {
+      const newXP = prev.xp + amount
+      const newLevel = Math.floor(newXP / 100) + 1
+      const leveledUp = newLevel > prev.level
+      
+      if (leveledUp) {
+        // Feed virtual pet when leveling up
+        setVirtualPet(prevPet => ({
+          ...prevPet,
+          happiness: Math.min(100, prevPet.happiness + 20),
+          growth: Math.min(100, prevPet.growth + 10)
+        }))
+      }
+      
+      return {
+        ...prev,
+        xp: newXP,
+        level: newLevel
+      }
+    })
+  }
+
+  const updateStreak = () => {
+    const today = new Date().toDateString()
+    setUserStats(prev => {
+      const lastPlay = prev.lastPlayDate
+      const yesterday = new Date()
+      yesterday.setDate(yesterday.getDate() - 1)
+      
+      let newStreak = prev.streak
+      if (lastPlay === yesterday.toDateString()) {
+        newStreak += 1
+      } else if (lastPlay !== today) {
+        newStreak = 1
+      }
+      
+      return {
+        ...prev,
+        streak: newStreak,
+        lastPlayDate: today
+      }
+    })
+  }
+
+  const unlockAchievement = (achievementId) => {
+    setUserStats(prev => {
+      if (prev.achievements.includes(achievementId)) {
+        return prev
+      }
+      
+      return {
+        ...prev,
+        achievements: [...prev.achievements, achievementId]
+      }
+    })
+  }
 
   const login = async (username, password) => {
     // Demo login - in real app this would call an API
@@ -157,15 +250,47 @@ function App() {
   }
 
   const updateWordStatus = (wordId, known) => {
-    setWords(prevWords => 
-      prevWords.map(word => 
+    setWords(prevWords => {
+      const updatedWords = prevWords.map(word => 
         word.id === wordId ? { ...word, known } : word
       )
-    )
+      
+      // Add XP and update stats when learning a new word
+      if (known) {
+        const word = prevWords.find(w => w.id === wordId)
+        if (word && !word.known) {
+          addXP(10, 'word_learned')
+          updateStreak()
+          setUserStats(prev => ({
+            ...prev,
+            totalWordsLearned: prev.totalWordsLearned + 1
+          }))
+          
+          // Check for achievements
+          const totalLearned = updatedWords.filter(w => w.known).length
+          if (totalLearned === 1) unlockAchievement('first_word')
+          if (totalLearned === 10) unlockAchievement('word_explorer')
+          if (totalLearned === 50) unlockAchievement('vocabulary_master')
+        }
+      }
+      
+      return updatedWords
+    })
   }
 
   const addTestResult = (wordId, remembered) => {
     setTestResults(prev => [...prev, { wordId, remembered, timestamp: Date.now() }])
+    
+    // Add XP for taking quiz
+    addXP(5, 'quiz_attempt')
+    if (remembered) {
+      addXP(10, 'correct_answer')
+    }
+    
+    setUserStats(prev => ({
+      ...prev,
+      totalQuizzesTaken: prev.totalQuizzesTaken + 1
+    }))
   }
 
   const resetTest = () => {
@@ -193,7 +318,7 @@ function App() {
 
   const deleteCategory = (categoryId) => {
     // Don't allow deleting default categories
-    const isDefault = defaultCategories.some(cat => cat.id === categoryId)
+    const isDefault = enhancedCategories.some(cat => cat.id === categoryId)
     if (isDefault) return
 
     // Remove category from words first
@@ -212,6 +337,25 @@ function App() {
       return words
     }
     return words.filter(word => selectedQuizCategories.includes(word.category))
+  }
+
+  // Virtual pet functions
+  const feedPet = () => {
+    setVirtualPet(prev => ({
+      ...prev,
+      happiness: Math.min(100, prev.happiness + 15),
+      lastFed: Date.now()
+    }))
+    addXP(5, 'pet_care')
+  }
+
+  const playWithPet = () => {
+    setVirtualPet(prev => ({
+      ...prev,
+      happiness: Math.min(100, prev.happiness + 10),
+      growth: Math.min(100, prev.growth + 5)
+    }))
+    addXP(5, 'pet_play')
   }
 
   const authValue = {
@@ -234,13 +378,22 @@ function App() {
     setIsTestMode,
     selectedQuizCategories,
     setSelectedQuizCategories,
+    userStats,
+    setUserStats,
+    virtualPet,
+    setVirtualPet,
     updateWordStatus,
     addTestResult,
     resetTest,
     addCategory,
     updateCategory,
     deleteCategory,
-    getFilteredWordsForQuiz
+    getFilteredWordsForQuiz,
+    addXP,
+    updateStreak,
+    unlockAchievement,
+    feedPet,
+    playWithPet
   }
 
   if (loading) {
