@@ -6,6 +6,8 @@ import { Input } from './ui/input'
 import { Badge } from './ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { useApp } from '../App'
+import WordManagement from './WordManagement'
+import CategoryManagement from './CategoryManagement'
 import { 
   Search, 
   Volume2, 
@@ -19,17 +21,31 @@ import {
   Sparkles,
   Trophy,
   CheckCircle,
-  Circle
+  Circle,
+  Plus,
+  Edit3,
+  Trash2,
+  MoreVertical,
+  Tag,
+  Settings
 } from 'lucide-react'
 
 const EnhancedWordLibrary = () => {
-  const { words, categories, updateWordStatus, addXP } = useApp()
+  const { words, setWords, categories, updateWordStatus, addXP } = useApp()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [selectedDifficulty, setSelectedDifficulty] = useState('all')
   const [knownFilter, setKnownFilter] = useState('all')
   const [viewMode, setViewMode] = useState('grid')
   const [sortBy, setSortBy] = useState('alphabetical')
+  
+  // Word management state
+  const [isWordManagementOpen, setIsWordManagementOpen] = useState(false)
+  const [editingWord, setEditingWord] = useState(null)
+  const [selectedWords, setSelectedWords] = useState(new Set())
+  
+  // Category management state
+  const [isCategoryManagementOpen, setIsCategoryManagementOpen] = useState(false)
 
   const speakWord = (word) => {
     if ('speechSynthesis' in window) {
@@ -45,6 +61,36 @@ const EnhancedWordLibrary = () => {
     if (!currentStatus) {
       addXP(10, 'word_learned')
     }
+  }
+
+  const handleAddWord = () => {
+    setEditingWord(null)
+    setIsWordManagementOpen(true)
+  }
+
+  const handleEditWord = (word) => {
+    setEditingWord(word)
+    setIsWordManagementOpen(true)
+  }
+
+  const handleDeleteWord = (wordId) => {
+    if (window.confirm('Are you sure you want to delete this word?')) {
+      setWords(prev => prev.filter(w => w.id !== wordId))
+      addXP(5, 'word_deleted')
+    }
+  }
+
+  const handleCloseWordManagement = () => {
+    setIsWordManagementOpen(false)
+    setEditingWord(null)
+  }
+
+  const handleOpenCategoryManagement = () => {
+    setIsCategoryManagementOpen(true)
+  }
+
+  const handleCloseCategoryManagement = () => {
+    setIsCategoryManagementOpen(false)
   }
 
   const filteredAndSortedWords = useMemo(() => {
@@ -115,14 +161,42 @@ const EnhancedWordLibrary = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
-      className="group"
+      className="group relative"
     >
       <Card className={`h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1 ${
         word.known ? 'bg-green-50 border-green-200' : 'bg-white border-gray-200'
       }`}>
+        {/* Action Menu */}
+        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex space-x-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleEditWord(word)}
+              className="h-8 w-8 p-0 bg-white shadow-sm hover:bg-blue-50"
+            >
+              <Edit3 className="w-3 h-3 text-blue-600" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleDeleteWord(word.id)}
+              className="h-8 w-8 p-0 bg-white shadow-sm hover:bg-red-50"
+            >
+              <Trash2 className="w-3 h-3 text-red-600" />
+            </Button>
+          </div>
+        </div>
+
         <CardContent className="p-6 text-center space-y-4">
           <div className="relative">
-            <div className="text-6xl mb-3">{word.image}</div>
+            <div className="text-6xl mb-3">
+              {word.image.startsWith('data:') ? (
+                <img src={word.image} alt={word.word} className="w-16 h-16 mx-auto object-cover rounded-lg" />
+              ) : (
+                word.image
+              )}
+            </div>
             {word.known && (
               <CheckCircle className="absolute -top-2 -right-2 w-6 h-6 text-green-500 bg-white rounded-full" />
             )}
@@ -263,13 +337,32 @@ const EnhancedWordLibrary = () => {
           animate={{ opacity: 1, y: 0 }}
           className="text-center"
         >
-          <h1 className="text-4xl font-bold text-gray-800 mb-2 flex items-center justify-center">
+          <div className="flex items-center justify-center mb-2">
             <BookOpen className="w-10 h-10 mr-3 text-indigo-600" />
-            Word Library
-          </h1>
-          <p className="text-gray-600 text-lg">
-            Explore and learn from our collection of {words.length} words
-          </p>
+            <h1 className="text-4xl font-bold text-gray-800">Word Library</h1>
+          </div>
+          <div className="flex items-center justify-center space-x-4">
+            <p className="text-gray-600 text-lg">
+              Explore and learn from our collection of {words.length} words
+            </p>
+            <div className="flex space-x-2">
+              <Button
+                onClick={handleAddWord}
+                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Word
+              </Button>
+              <Button
+                onClick={handleOpenCategoryManagement}
+                variant="outline"
+                className="border-indigo-300 text-indigo-600 hover:bg-indigo-50"
+              >
+                <Tag className="w-4 h-4 mr-2" />
+                Manage Categories
+              </Button>
+            </div>
+          </div>
         </motion.div>
 
         {/* Filters and Search */}
@@ -454,6 +547,19 @@ const EnhancedWordLibrary = () => {
           )}
         </motion.div>
       </div>
+
+      {/* Word Management Modal */}
+      <WordManagement
+        isOpen={isWordManagementOpen}
+        onClose={handleCloseWordManagement}
+        editingWord={editingWord}
+      />
+
+      {/* Category Management Modal */}
+      <CategoryManagement
+        isOpen={isCategoryManagementOpen}
+        onClose={handleCloseCategoryManagement}
+      />
     </div>
   )
 }

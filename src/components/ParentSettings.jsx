@@ -5,7 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { Input } from './ui/input'
 import { Switch } from './ui/switch'
 import { Label } from './ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { useAuth, useApp } from '../App'
+import AppearanceSettings from './AppearanceSettings'
 import { 
   Settings, 
   User, 
@@ -21,7 +23,9 @@ import {
   Eye,
   EyeOff,
   AlertCircle,
-  FileText
+  FileText,
+  Brain,
+  Trophy
 } from 'lucide-react'
 
 const ParentSettings = () => {
@@ -37,18 +41,57 @@ const ParentSettings = () => {
   const [confirmPassword, setConfirmPassword] = useState('')
   
   const [settings, setSettings] = useState({
+    // Learning Preferences
     soundEnabled: true,
     autoAdvance: false,
     showDifficulty: true,
     showHints: true,
     showEmojis: true,
-    darkMode: false,
-    childName: user?.username || '',
+    showPronunciation: true,
+    showExamples: true,
+    showFunFacts: true,
+    autoPlayAudio: false,
+    repeatAudio: false,
+    slowAudio: false,
+    
+    // Quiz Settings
+    quizMode: 'mixed', // 'mixed', 'recognition', 'spelling', 'definition'
+    quizDifficulty: 'adaptive', // 'easy', 'medium', 'hard', 'adaptive'
+    questionsPerQuiz: 10,
+    showCorrectAnswer: true,
+    allowRetries: true,
+    timeLimit: 0, // 0 = no limit, in seconds
+    
+    // Progress & Motivation
     dailyGoal: 5,
-    passwordProtected: false
+    weeklyGoal: 25,
+    showProgress: true,
+    showAchievements: true,
+    enableStreaks: true,
+    celebrateSuccess: true,
+    
+    // Appearance
+    darkMode: false,
+    fontSize: 'medium', // 'small', 'medium', 'large'
+    colorTheme: 'default', // 'default', 'blue', 'green', 'purple', 'pink'
+    animationsEnabled: true,
+    reducedMotion: false,
+    
+    // Parental Controls
+    childName: user?.username || '',
+    passwordProtected: false,
+    timeRestrictions: false,
+    maxDailyTime: 60, // minutes
+    allowedCategories: [], // empty = all allowed
+    
+    // Data & Privacy
+    saveProgress: true,
+    shareAnalytics: false,
+    autoBackup: true
   })
 
   const [showResetConfirm, setShowResetConfirm] = useState(false)
+  const [activeTab, setActiveTab] = useState('settings') // 'settings' or 'appearance'
 
   useEffect(() => {
     // Load saved settings
@@ -116,6 +159,21 @@ const ParentSettings = () => {
     localStorage.setItem('word_adventure_settings', JSON.stringify(settings))
     // Show success message
     alert('Settings saved successfully! 🎉')
+  }
+
+  const resetAppearanceSettings = () => {
+    const defaultAppearance = {
+      fontSize: 'medium',
+      colorTheme: 'default',
+      animationsEnabled: true,
+      reducedMotion: false,
+      darkMode: false,
+      highContrast: false
+    }
+    
+    Object.keys(defaultAppearance).forEach(key => {
+      handleSettingChange(key, defaultAppearance[key])
+    })
   }
 
   const resetProgress = () => {
@@ -218,7 +276,17 @@ const ParentSettings = () => {
           type: 'number',
           value: settings.dailyGoal,
           min: 1,
-          max: 20
+          max: 20,
+          description: 'Number of words to learn each day'
+        },
+        {
+          key: 'weeklyGoal',
+          label: 'Weekly Learning Goal',
+          type: 'number',
+          value: settings.weeklyGoal,
+          min: 5,
+          max: 100,
+          description: 'Number of words to learn each week'
         }
       ]
     },
@@ -232,6 +300,48 @@ const ParentSettings = () => {
           type: 'switch',
           value: settings.soundEnabled,
           description: 'Enable word pronunciation and sound effects'
+        },
+        {
+          key: 'autoPlayAudio',
+          label: 'Auto-Play Audio',
+          type: 'switch',
+          value: settings.autoPlayAudio,
+          description: 'Automatically play word pronunciation'
+        },
+        {
+          key: 'repeatAudio',
+          label: 'Repeat Audio',
+          type: 'switch',
+          value: settings.repeatAudio,
+          description: 'Play pronunciation multiple times'
+        },
+        {
+          key: 'slowAudio',
+          label: 'Slow Audio',
+          type: 'switch',
+          value: settings.slowAudio,
+          description: 'Play pronunciation at slower speed'
+        },
+        {
+          key: 'showPronunciation',
+          label: 'Show Pronunciation',
+          type: 'switch',
+          value: settings.showPronunciation,
+          description: 'Display phonetic pronunciation guide'
+        },
+        {
+          key: 'showExamples',
+          label: 'Show Examples',
+          type: 'switch',
+          value: settings.showExamples,
+          description: 'Display example sentences for words'
+        },
+        {
+          key: 'showFunFacts',
+          label: 'Show Fun Facts',
+          type: 'switch',
+          value: settings.showFunFacts,
+          description: 'Display interesting facts about words'
         },
         {
           key: 'autoAdvance',
@@ -264,9 +374,147 @@ const ParentSettings = () => {
       ]
     },
     {
+      title: 'Quiz Settings',
+      icon: Brain,
+      items: [
+        {
+          key: 'quizMode',
+          label: 'Quiz Mode',
+          type: 'select',
+          value: settings.quizMode,
+          options: [
+            { value: 'mixed', label: 'Mixed Questions' },
+            { value: 'recognition', label: 'Word Recognition' },
+            { value: 'spelling', label: 'Spelling Practice' },
+            { value: 'definition', label: 'Definition Matching' }
+          ],
+          description: 'Type of quiz questions to present'
+        },
+        {
+          key: 'quizDifficulty',
+          label: 'Quiz Difficulty',
+          type: 'select',
+          value: settings.quizDifficulty,
+          options: [
+            { value: 'adaptive', label: 'Adaptive (Recommended)' },
+            { value: 'easy', label: 'Easy' },
+            { value: 'medium', label: 'Medium' },
+            { value: 'hard', label: 'Hard' }
+          ],
+          description: 'Difficulty level for quiz questions'
+        },
+        {
+          key: 'questionsPerQuiz',
+          label: 'Questions Per Quiz',
+          type: 'number',
+          value: settings.questionsPerQuiz,
+          min: 5,
+          max: 25,
+          description: 'Number of questions in each quiz session'
+        },
+        {
+          key: 'timeLimit',
+          label: 'Time Limit (seconds)',
+          type: 'number',
+          value: settings.timeLimit,
+          min: 0,
+          max: 300,
+          description: 'Time limit per question (0 = no limit)'
+        },
+        {
+          key: 'showCorrectAnswer',
+          label: 'Show Correct Answer',
+          type: 'switch',
+          value: settings.showCorrectAnswer,
+          description: 'Show correct answer when wrong'
+        },
+        {
+          key: 'allowRetries',
+          label: 'Allow Retries',
+          type: 'switch',
+          value: settings.allowRetries,
+          description: 'Allow retrying incorrect answers'
+        }
+      ]
+    },
+    {
+      title: 'Progress & Motivation',
+      icon: Trophy,
+      items: [
+        {
+          key: 'showProgress',
+          label: 'Show Progress',
+          type: 'switch',
+          value: settings.showProgress,
+          description: 'Display learning progress and statistics'
+        },
+        {
+          key: 'showAchievements',
+          label: 'Show Achievements',
+          type: 'switch',
+          value: settings.showAchievements,
+          description: 'Display achievement badges and rewards'
+        },
+        {
+          key: 'enableStreaks',
+          label: 'Enable Streaks',
+          type: 'switch',
+          value: settings.enableStreaks,
+          description: 'Track daily learning streaks'
+        },
+        {
+          key: 'celebrateSuccess',
+          label: 'Celebrate Success',
+          type: 'switch',
+          value: settings.celebrateSuccess,
+          description: 'Show celebrations for achievements'
+        }
+      ]
+    },
+    {
       title: 'Appearance',
       icon: Palette,
       items: [
+        {
+          key: 'fontSize',
+          label: 'Font Size',
+          type: 'select',
+          value: settings.fontSize,
+          options: [
+            { value: 'small', label: 'Small' },
+            { value: 'medium', label: 'Medium' },
+            { value: 'large', label: 'Large' }
+          ],
+          description: 'Text size throughout the application'
+        },
+        {
+          key: 'colorTheme',
+          label: 'Color Theme',
+          type: 'select',
+          value: settings.colorTheme,
+          options: [
+            { value: 'default', label: 'Default (Purple/Pink)' },
+            { value: 'blue', label: 'Ocean Blue' },
+            { value: 'green', label: 'Nature Green' },
+            { value: 'purple', label: 'Royal Purple' },
+            { value: 'pink', label: 'Bubblegum Pink' }
+          ],
+          description: 'Color scheme for the interface'
+        },
+        {
+          key: 'animationsEnabled',
+          label: 'Animations',
+          type: 'switch',
+          value: settings.animationsEnabled,
+          description: 'Enable smooth animations and transitions'
+        },
+        {
+          key: 'reducedMotion',
+          label: 'Reduced Motion',
+          type: 'switch',
+          value: settings.reducedMotion,
+          description: 'Reduce motion for accessibility'
+        },
         {
           key: 'darkMode',
           label: 'Dark Mode',
@@ -368,8 +616,55 @@ const ParentSettings = () => {
             </p>
           </motion.div>
 
-      {/* Settings Sections */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Tab Navigation */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="flex justify-center"
+          >
+            <div className="bg-white rounded-lg p-1 shadow-lg border">
+              <div className="flex space-x-1">
+                <Button
+                  variant={activeTab === 'settings' ? 'default' : 'ghost'}
+                  onClick={() => setActiveTab('settings')}
+                  className={`px-6 py-2 ${
+                    activeTab === 'settings' 
+                      ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white' 
+                      : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  <Settings className="w-4 h-4 mr-2" />
+                  Learning Settings
+                </Button>
+                <Button
+                  variant={activeTab === 'appearance' ? 'default' : 'ghost'}
+                  onClick={() => setActiveTab('appearance')}
+                  className={`px-6 py-2 ${
+                    activeTab === 'appearance' 
+                      ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white' 
+                      : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  <Palette className="w-4 h-4 mr-2" />
+                  Appearance
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Tab Content */}
+          <AnimatePresence mode="wait">
+            {activeTab === 'settings' ? (
+              <motion.div
+                key="settings"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.3 }}
+              >
+                {/* Settings Sections */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {settingSections.map((section, sectionIndex) => (
           <motion.div
             key={section.title}
@@ -424,6 +719,24 @@ const ParentSettings = () => {
                           className="w-20"
                         />
                       )}
+                      
+                      {item.type === 'select' && (
+                        <Select
+                          value={item.value}
+                          onValueChange={(value) => handleSettingChange(item.key, value)}
+                        >
+                          <SelectTrigger className="w-48">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {item.options.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -431,7 +744,25 @@ const ParentSettings = () => {
             </Card>
           </motion.div>
         ))}
-      </div>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="appearance"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                <AppearanceSettings
+                  settings={settings}
+                  onSettingChange={handleSettingChange}
+                  onSave={saveSettings}
+                  onReset={resetAppearanceSettings}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
       {/* Password Management */}
       <motion.div
