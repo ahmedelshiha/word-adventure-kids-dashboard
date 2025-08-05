@@ -1,6 +1,6 @@
 {
   "name": "word-adventure-kids-dashboard",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "A delightful and interactive vocabulary learning application designed specifically for children",
   "type": "module",
   "scripts": {
