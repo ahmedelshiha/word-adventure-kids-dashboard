@@ -223,23 +223,41 @@ function App() {
     })
   }
 
-  const login = async (username, password) => {
-    // Demo login - in real app this would call an API
-    if (username && password) {
-      const demoUser = {
-        id: 1,
-        username: username,
-        email: `${username}@wordadventure.com`,
-        avatar: '👤',
-        level: 1,
-        points: 0
-      }
-      setUser(demoUser)
-      localStorage.setItem('word_adventure_user', JSON.stringify(demoUser))
-      return { success: true }
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+
+const login = async (username, password ) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ username, password })
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      // Assuming your backend returns a token and admin user data
+      localStorage.setItem('admin_token', data.access_token);
+      const adminUser = { // Create a user object from admin data if needed
+        id: data.admin.id,
+        username: data.admin.username,
+        email: data.admin.email,
+        // ... any other admin user properties you want to store
+      };
+      setUser(adminUser);
+      localStorage.setItem('word_adventure_user', JSON.stringify(adminUser)); // Store in local storage
+      return { success: true };
+    } else {
+      return { success: false, error: data.error || 'Login failed' };
     }
-    return { success: false, error: 'Please enter username and password' }
+  } catch (error) {
+    console.error('Login API call failed:', error);
+    return { success: false, error: 'Network error. Please try again.' };
   }
+};
+
 
   const logout = () => {
     localStorage.removeItem('word_adventure_user')
