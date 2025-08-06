@@ -11,6 +11,10 @@ import ProgressDashboard from './components/ProgressDashboard'
 import ParentSettings from './components/ParentSettings'
 import Layout from './components/Layout'
 import LoadingSpinner from './components/LoadingSpinner'
+import PWAInstallPrompt from './components/PWAInstallPrompt'
+import OfflineIndicator from './components/OfflineIndicator'
+import api from './services/api'
+import { useOfflineSync } from './hooks/useOfflineSync'
 import './App.css'
 
 // Authentication Context
@@ -67,80 +71,119 @@ function App() {
     lastFed: Date.now()
   })
 
+  // Offline sync hook
+  const { queueChange } = useOfflineSync()
+
+  // Register service worker for PWA
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then((registration) => {
+          console.log('SW registered: ', registration)
+        })
+        .catch((registrationError) => {
+          console.log('SW registration failed: ', registrationError)
+        })
+    }
+  }, [])
+
   // Check for existing session on app load
   useEffect(() => {
-    const savedUser = localStorage.getItem('word_adventure_user')
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser))
-      } catch (error) {
-        console.error('Error parsing saved user:', error)
-        localStorage.removeItem('word_adventure_user')
+    const initializeApp = async () => {
+      // Check for saved user
+      const savedUser = localStorage.getItem('word_adventure_user')
+      if (savedUser) {
+        try {
+          setUser(JSON.parse(savedUser))
+        } catch (error) {
+          console.error('Error parsing saved user:', error)
+          localStorage.removeItem('word_adventure_user')
+        }
       }
-    }
-    
-    // Load saved words progress
-    const savedWords = localStorage.getItem('word_adventure_words')
-    if (savedWords) {
+      
+      // Try to load words from API first, fallback to local
       try {
-        const parsedWords = JSON.parse(savedWords)
-        // Merge with new database, preserving progress
-        const mergedWords = wordsDatabase.map(word => {
-          const savedWord = parsedWords.find(sw => sw.id === word.id)
-          return savedWord ? { ...word, known: savedWord.known } : word
-        })
-        setWords(mergedWords)
+        const apiWords = await api.getWords()
+        if (apiWords && apiWords.length > 0) {
+          setWords(apiWords)
+        } else {
+          // Load saved words progress from localStorage
+          const savedWords = localStorage.getItem('word_adventure_words')
+          if (savedWords) {
+            try {
+              const parsedWords = JSON.parse(savedWords)
+              // Merge with new database, preserving progress
+              const mergedWords = wordsDatabase.map(word => {
+                const savedWord = parsedWords.find(sw => sw.id === word.id)
+                return savedWord ? { ...word, known: savedWord.known } : word
+              })
+              setWords(mergedWords)
+            } catch (error) {
+              console.error('Error parsing saved words:', error)
+            }
+          }
+        }
       } catch (error) {
-        console.error('Error parsing saved words:', error)
+        console.warn('Failed to load words from API, using local data')
       }
-    }
-    
-    // Load saved test results
-    const savedTestResults = localStorage.getItem('word_adventure_test_results')
-    if (savedTestResults) {
+      
+      // Try to load categories from API
       try {
-        setTestResults(JSON.parse(savedTestResults))
+        const apiCategories = await api.getCategories()
+        if (apiCategories && apiCategories.length > 0) {
+          setCategories(apiCategories)
+        } else {
+          // Load saved categories from localStorage
+          const savedCategories = localStorage.getItem('word_adventure_categories')
+          if (savedCategories) {
+            try {
+              const parsedCategories = JSON.parse(savedCategories)
+              // Merge with enhanced categories
+              const mergedCategories = [...enhancedCategories, ...parsedCategories.filter(cat => 
+                !enhancedCategories.some(ec => ec.id === cat.id)
+              )]
+              setCategories(mergedCategories)
+            } catch (error) {
+              console.error('Error parsing saved categories:', error)
+            }
+          }
+        }
       } catch (error) {
-        console.error('Error parsing saved test results:', error)
+        console.warn('Failed to load categories from API, using local data')
       }
+      
+      // Load other saved data
+      const savedTestResults = localStorage.getItem('word_adventure_test_results')
+      if (savedTestResults) {
+        try {
+          setTestResults(JSON.parse(savedTestResults))
+        } catch (error) {
+          console.error('Error parsing saved test results:', error)
+        }
+      }
+      
+      const savedStats = localStorage.getItem('word_adventure_stats')
+      if (savedStats) {
+        try {
+          setUserStats(JSON.parse(savedStats))
+        } catch (error) {
+          console.error('Error parsing saved stats:', error)
+        }
+      }
+      
+      const savedPet = localStorage.getItem('word_adventure_pet')
+      if (savedPet) {
+        try {
+          setVirtualPet(JSON.parse(savedPet))
+        } catch (error) {
+          console.error('Error parsing saved pet:', error)
+        }
+      }
+      
+      setLoading(false)
     }
 
-    // Load saved categories
-    const savedCategories = localStorage.getItem('word_adventure_categories')
-    if (savedCategories) {
-      try {
-        const parsedCategories = JSON.parse(savedCategories)
-        // Merge with enhanced categories
-        const mergedCategories = [...enhancedCategories, ...parsedCategories.filter(cat => 
-          !enhancedCategories.some(ec => ec.id === cat.id)
-        )]
-        setCategories(mergedCategories)
-      } catch (error) {
-        console.error('Error parsing saved categories:', error)
-      }
-    }
-    
-    // Load saved user stats
-    const savedStats = localStorage.getItem('word_adventure_stats')
-    if (savedStats) {
-      try {
-        setUserStats(JSON.parse(savedStats))
-      } catch (error) {
-        console.error('Error parsing saved stats:', error)
-      }
-    }
-    
-    // Load saved virtual pet
-    const savedPet = localStorage.getItem('word_adventure_pet')
-    if (savedPet) {
-      try {
-        setVirtualPet(JSON.parse(savedPet))
-      } catch (error) {
-        console.error('Error parsing saved pet:', error)
-      }
-    }
-    
-    setLoading(false)
+    initializeApp()
   }, [])
 
   // Save data whenever it changes
@@ -224,29 +267,55 @@ function App() {
   }
 
   const login = async (username, password) => {
-    // Demo login - in real app this would call an API
-    if (username && password) {
-      const demoUser = {
-        id: 1,
-        username: username,
-        email: `${username}@wordadventure.com`,
-        avatar: '👤',
-        level: 1,
-        points: 0
+    try {
+      const result = await api.login({ username, password })
+      
+      if (result.success) {
+        const userData = result.user || {
+          id: 1,
+          username: username,
+          email: `${username}@wordadventure.com`,
+          avatar: '👤',
+          level: 1,
+          points: 0,
+          isDemo: result.user?.isDemo || false
+        }
+        
+        setUser(userData)
+        localStorage.setItem('word_adventure_user', JSON.stringify(userData))
+        
+        // Track login event
+        queueChange({
+          type: 'analytics_event',
+          data: {
+            event: 'user_login',
+            userId: userData.id,
+            timestamp: Date.now()
+          }
+        })
+        
+        return { success: true }
+      } else {
+        return { success: false, error: result.error || 'Login failed' }
       }
-      setUser(demoUser)
-      localStorage.setItem('word_adventure_user', JSON.stringify(demoUser))
-      return { success: true }
+    } catch (error) {
+      console.error('Login error:', error)
+      return { success: false, error: 'Login failed. Please try again.' }
     }
-    return { success: false, error: 'Please enter username and password' }
   }
 
-  const logout = () => {
-    localStorage.removeItem('word_adventure_user')
-    setUser(null)
-    setTestResults([])
-    setCurrentWordIndex(0)
-    setIsTestMode(false)
+  const logout = async () => {
+    try {
+      await api.logout()
+    } catch (error) {
+      console.warn('API logout failed:', error)
+    } finally {
+      localStorage.removeItem('word_adventure_user')
+      setUser(null)
+      setTestResults([])
+      setCurrentWordIndex(0)
+      setIsTestMode(false)
+    }
   }
 
   const updateWordStatus = (wordId, known) => {
@@ -405,6 +474,8 @@ function App() {
       <AppContext.Provider value={appValue}>
         <Router>
           <div className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-50 to-blue-100">
+            <OfflineIndicator />
+            <PWAInstallPrompt />
             <AnimatePresence mode="wait">
               <Routes>
                 <Route 
